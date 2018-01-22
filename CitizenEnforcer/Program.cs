@@ -86,7 +86,35 @@ namespace CitizenEnforcer
             //Don't kill me, but I prefer a binded config
             var configClass = new Configuration();
             config.Bind(configClass);
+            Console.Write("Please enter the database password: ");
+            configClass.DBPassword = GetPassword();
             return configClass;
+        }
+
+        public string GetPassword()
+        {
+            ConsoleKeyInfo key;
+            string pass = "";
+            do
+            {
+                key = Console.ReadKey(true);
+                if (!char.IsControl(key.KeyChar))
+                {
+                    pass += key.KeyChar;
+                    Console.Write("*");
+                }
+                else
+                {
+                    if (key.Key == ConsoleKey.Backspace && pass.Length > 0)
+                    {
+                        pass = pass.Substring(0, pass.Length - 1);
+                        Console.Write("\b \b");
+                    }
+                }
+            }
+            while (key.Key != ConsoleKey.Enter);
+            Console.WriteLine();
+            return pass;
         }
         private static LogEventLevel EventLevelFromSeverity(LogSeverity severity) => (LogEventLevel)Math.Abs((int)severity - 5);
     }

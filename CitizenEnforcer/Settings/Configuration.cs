@@ -1,9 +1,13 @@
-﻿namespace CitizenEnforcer.Settings
+﻿using Newtonsoft.Json;
+
+namespace CitizenEnforcer.Settings
 {
     public class Configuration
     {
         public ulong[] Owner { get; set; }
         public string Prefix { get; set; }
         public string Token { get; set; } 
+        [JsonIgnore]
+        public string DBPassword { get; set; }
     }
 }
