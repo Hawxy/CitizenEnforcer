@@ -82,8 +82,7 @@ namespace CitizenEnforcer.Modules
             guild.PublicAnnouceChannel = publicchannel.Id;
             guild.IsPublicAnnounceEnabled = true;
             await _botContext.SaveChangesAsync();
-            await ReplyAsync($"Announce channel set to {(publicchannel as ITextChannel)?.Mention}");
-
+            await ReplyAsync($"Announce channel set to {(publicchannel as ITextChannel)?.Mention}, Setup complete!");
             #endregion
         }
 

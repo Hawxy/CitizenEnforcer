@@ -59,13 +59,16 @@ namespace CitizenEnforcer.Modules
 
         [Command("unban")]
         [Alias("ub")]
-        public async Task Unban(IBan ban) => await _moderationService.UnbanUser(Context, ban.User);
+        [RequireBotPermission(GuildPermission.BanMembers)]
+        [Summary("Unbans a given user")]
+        public async Task Unban(IBan bannedUser) => await _moderationService.UnbanUser(Context, bannedUser.User);
         
         [Command("reason")]
         [Alias("r")]
-        public async Task Reason(ulong entryID, [Remainder] string reason)
+        [Summary("Sets the reason of a given caseID")]
+        public async Task Reason(ulong caseID, [Remainder] string reason)
         {
-            var entry = await _botContext.ModLogs.Include(z=> z.Guild).FirstOrDefaultAsync(x => x.ModLogCaseID == entryID && x.GuildId == Context.Guild.Id && x.ModId == Context.User.Id);
+            var entry = await _botContext.ModLogs.Include(z=> z.Guild).FirstOrDefaultAsync(x => x.ModLogCaseID == caseID && x.GuildId == Context.Guild.Id && x.ModId == Context.User.Id);
             if (entry == null)
             {
                 await ReplyAsync("Either you are not the responsible moderator for this entry or the entry does not exist");

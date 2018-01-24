@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using CitizenEnforcer.Settings;
 using Discord;
@@ -34,21 +35,24 @@ namespace CitizenEnforcer.Services
             {
                 if(module.Name == "HelpModule")
                     continue;
-                string description = null;
+                StringBuilder description = new StringBuilder();
                 foreach (var cmd in module.Commands)
                 {
                     var result = await cmd.CheckPreconditionsAsync(context, _map);
                     if (result.IsSuccess)
                     {
-                        description += $"{prefix}{cmd.Aliases.First()}\n";
+                        description.Append($"{prefix}{cmd.Aliases.First()} ");
+                        if (cmd.Parameters.Any())
+                            description.Append($"[{string.Join(", ", cmd.Parameters.Select(p => p.Name))}]");
+                        description.Append("\n");
                     }
                 }
-                if (!string.IsNullOrWhiteSpace(description))
+                if (!string.IsNullOrWhiteSpace(description.ToString()))
                 {
                     builder.AddField(x =>
                     {
                         x.Name = module.Name;
-                        x.Value = description;
+                        x.Value = description.ToString();
                         x.IsInline = false;
                     });
                 }
