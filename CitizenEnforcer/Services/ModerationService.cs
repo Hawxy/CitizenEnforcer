@@ -26,7 +26,7 @@ namespace CitizenEnforcer.Services
             await _botContext.ModLogs.AddAsync(logEntry);
             await _botContext.SaveChangesAsync();
 
-            var builder = FormatUtilities.GetWarnBuilder(user, context.User, caseID, reason);
+            var builder = FormatUtilities.GetWarnBuilder(user, context.User, caseID, reason, logEntry.DateTime);
 
             var message = await SendMessageToModLog(context.Guild, builder);
             logEntry.LoggedMessageId = message.Id;
@@ -43,7 +43,7 @@ namespace CitizenEnforcer.Services
             await _botContext.ModLogs.AddAsync(logEntry);
             await _botContext.SaveChangesAsync();
 
-            var builder = FormatUtilities.GetKickBuilder(user, context.User, caseID, reason);
+            var builder = FormatUtilities.GetKickBuilder(user, context.User, caseID, reason, logEntry.DateTime);
 
             //Kick
             await user.KickAsync();
@@ -72,7 +72,7 @@ namespace CitizenEnforcer.Services
 
             await _botContext.TempBans.AddAsync(tempBan);
 
-            var builder = FormatUtilities.GetTempBanBuilder(user, context.User, caseID, reason, tempBan.ExpireDate.ToUniversalTime());
+            var builder = FormatUtilities.GetTempBanBuilder(user, context.User, caseID, reason, logEntry.DateTime, tempBan.ExpireDate.ToUniversalTime());
 
             //Ban
             await context.Guild.AddBanAsync(user);
@@ -115,7 +115,7 @@ namespace CitizenEnforcer.Services
             await _botContext.SaveChangesAsync();
             await context.Message.DeleteAsync();
 
-            var builder = FormatUtilities.GetBanBuilder(user, context.User, caseID, reason);
+            var builder = FormatUtilities.GetBanBuilder(user, context.User, caseID, reason, logEntry.DateTime);
 
             var message = await SendMessageToModLog(context.Guild, builder);
             logEntry.LoggedMessageId = message.Id;

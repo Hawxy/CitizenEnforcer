@@ -19,36 +19,37 @@ namespace CitizenEnforcer.Modules
         public BotContext _botContext { get; set; }
         public InteractiveService _interactiveService { get; set; }
         public ModerationService _moderationService { get; set; }
+        public LookupService _lookupService { get; set; }
 
         [Command("warn")]
         [Alias("w")]
         [Summary("Logs a user warning. Supports an optional specified reason")]
-        public async Task Warn(IGuildUser user, [Remainder] string reason = null) => await _moderationService.WarnUser(Context, user, reason);
+        public async Task Warn([NotSelf]IGuildUser user, [Remainder] string reason = null) => await _moderationService.WarnUser(Context, user, reason);
 
         [Command("kick")]
         [Alias("k")]
         [RequireBotPermission(GuildPermission.KickMembers)]
         [Summary("Removes a user from the server. Supports an optional specified reason")]
-        public async Task Kick(IGuildUser user, [Remainder] string reason = null) => await _moderationService.KickUser(Context, user, reason);
+        public async Task Kick([NotSelf]IGuildUser user, [Remainder] string reason = null) => await _moderationService.KickUser(Context, user, reason);
 
         [Command("tempban")]
         [Alias("tb")]
         [RequireBotPermission(GuildPermission.BanMembers)]
         [Summary("Temporarily bans a user for 3 days. Supports an optional specified reason")]
-        public async Task TempBan(IGuildUser user, [Remainder] string reason = null) => await _moderationService.TempBanUser(Context, user, reason);
+        public async Task TempBan([NotSelf]IGuildUser user, [Remainder] string reason = null) => await _moderationService.TempBanUser(Context, user, reason);
 
         [Command("softban")]
         [Alias("sb")]
         [RequireBotPermission(GuildPermission.BanMembers)]
         [Summary("Bans a user without deleting message history. Supports an optional specified reason")]
-        public async Task SoftBan(IGuildUser user, [Remainder] string reason = null) => await _moderationService.BanUser(Context, user, reason, false, false);
+        public async Task SoftBan([NotSelf]IGuildUser user, [Remainder] string reason = null) => await _moderationService.BanUser(Context, user, reason, false, false);
 
         [Priority(0)]
         [Command("ban")]
         [Alias("b")]
         [RequireBotPermission(GuildPermission.BanMembers)]
         [Summary("Bans and deletes recent message history. Supports an optional specified reason")]
-        public async Task Ban(IGuildUser user, [Remainder] string reason = null) => await _moderationService.BanUser(Context, user, reason, false, true);
+        public async Task Ban([NotSelf]IGuildUser user, [Remainder] string reason = null) => await _moderationService.BanUser(Context, user, reason, false, true);
 
         [Priority(1)]
         [Command("ban")]
@@ -95,5 +96,22 @@ namespace CitizenEnforcer.Modules
                 await _interactiveService.ReplyAndDeleteAsync(Context, Emote.Parse("<:thumbsup:338616449826291714>").ToString(), timeout: TimeSpan.FromSeconds(5));
             }
         }
+
+        [Command("lookupuser")]
+        [Alias("lookupu", "lu")]
+        [Priority(0)]
+        [Summary("Finds previous cases of a given user")]
+        public async Task LookupUser(IGuildUser user) => await _lookupService.LookupUser(Context, user);
+
+        [Command("lookupuser")]
+        [Alias("lookupu","lu")]
+        [Priority(1)]
+        [Summary("Find previous cases of a banned user")]
+        public async Task LookupUser(IBan bannedUser) => await _lookupService.LookupUser(Context, bannedUser.User);
+
+        [Command("lookupcase")]
+        [Alias("lookupc", "lc")]
+        [Summary("Displays a stored case")]
+        public async Task LookupCase(ulong caseID) => await _lookupService.LookupCase(Context, caseID);
     }
 }

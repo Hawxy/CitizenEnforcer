@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using CitizenEnforcer.Models;
 using Discord;
 
 namespace CitizenEnforcer.Common
@@ -7,11 +9,11 @@ namespace CitizenEnforcer.Common
     {
         public static string GetFullName(IUser user) => $"{user.Username}#{user.Discriminator}";
 
-        public static EmbedBuilder GetWarnBuilder(IUser user, IUser mod, ulong caseID, string reason)
+        public static EmbedBuilder GetWarnBuilder(IUser user, IUser mod, ulong caseID, string reason, DateTimeOffset postedDate)
         {
             var manbuilder =
                 new EmbedBuilder().WithColor(new Color(2, 136, 209))
-                    .WithAuthor(mod).WithCurrentTimestamp().WithTitle($"Warned User - Entry ID: {caseID}").WithDescription("---------------------");
+                    .WithAuthor(mod).WithTimestamp(postedDate).WithTitle($"Warned User - Entry ID: {caseID}").WithDescription("---------------------");
 
             manbuilder.AddField(z =>
             {
@@ -34,11 +36,11 @@ namespace CitizenEnforcer.Common
             return manbuilder;
         }
 
-        public static EmbedBuilder GetKickBuilder(IUser user, IUser mod, ulong caseID, string reason)
+        public static EmbedBuilder GetKickBuilder(IUser user, IUser mod, ulong caseID, string reason, DateTimeOffset postedDate)
         {
             var manbuilder =
                 new EmbedBuilder().WithColor(new Color(253, 216, 53))
-                    .WithAuthor(mod).WithCurrentTimestamp().WithTitle($"Kicked User - Entry ID: {caseID}").WithDescription("---------------------");
+                    .WithAuthor(mod).WithTimestamp(postedDate).WithTitle($"Kicked User - Entry ID: {caseID}").WithDescription("---------------------");
 
             manbuilder.AddField(z =>
             {
@@ -60,11 +62,11 @@ namespace CitizenEnforcer.Common
             return manbuilder;
         }
 
-        public static EmbedBuilder GetTempBanBuilder(IUser user, IUser mod, ulong caseID, string reason, DateTime endTime)
+        public static EmbedBuilder GetTempBanBuilder(IUser user, IUser mod, ulong caseID, string reason, DateTimeOffset postedDate, DateTimeOffset endTime)
         {
             var manbuilder =
                 new EmbedBuilder().WithColor(new Color(251, 140, 0))
-                    .WithAuthor(mod).WithCurrentTimestamp().WithTitle($"User Temp-Banned - Entry ID: {caseID}").WithDescription("---------------------");
+                    .WithAuthor(mod).WithTimestamp(postedDate).WithTitle($"User Temp-Banned - Entry ID: {caseID}").WithDescription("---------------------");
 
             manbuilder.AddField(z =>
             {
@@ -92,11 +94,11 @@ namespace CitizenEnforcer.Common
             return manbuilder;
         }
 
-        public static EmbedBuilder GetBanBuilder(IUser user, IUser mod, ulong caseID, string reason)
+        public static EmbedBuilder GetBanBuilder(IUser user, IUser mod, ulong caseID, string reason, DateTimeOffset postedDate)
         {
             var manbuilder =
                 new EmbedBuilder().WithColor(new Color(229, 57, 53))
-                    .WithAuthor(mod).WithCurrentTimestamp().WithTitle($"User Banned - Entry ID: {caseID}").WithDescription("---------------------");
+                    .WithAuthor(mod).WithTimestamp(postedDate).WithTitle($"User Banned - Entry ID: {caseID}").WithDescription("---------------------");
 
             manbuilder.AddField(z =>
             {
@@ -138,6 +140,33 @@ namespace CitizenEnforcer.Common
                 z.Name = "UserID";
                 z.Value = user.Id;
                 z.IsInline = true;
+            });
+
+            return manbuilder;
+        }
+
+        public static EmbedBuilder GetUserLookupBuilder(IUser user, List<ulong> cases, InfractionType infraction)
+        {
+            var manbuilder =
+                new EmbedBuilder().WithColor(new Color(2, 136, 209))
+                    .WithCurrentTimestamp().WithTitle($"User Lookup - {GetFullName(user)}").WithDescription("---------------------");
+
+            manbuilder.AddField(z =>
+            {
+                z.Name = "UserID";
+                z.Value = user.Id;
+                z.IsInline = true;
+            });
+            manbuilder.AddField(z =>
+            {
+                z.Name = "Highest Infraction";
+                z.Value = infraction.ToString();
+                z.IsInline = true;
+            });
+            manbuilder.AddField(z =>
+            {
+                z.Name = "Related Case IDs:";
+                z.Value = $"```{string.Join("\n", cases)}```";
             });
 
             return manbuilder;

@@ -26,7 +26,7 @@ namespace CitizenEnforcer.Services
 
         private async void CheckBan()
         {
-            List<TempBan> Unbans = await _botContext.TempBans.Include(y=> y.ModLog).Where(x => x.TempBanActive && DateTime.Now > x.ExpireDate).ToListAsync();
+            List<TempBan> Unbans = await _botContext.TempBans.Include(y=> y.ModLog).Where(x => x.TempBanActive && DateTimeOffset.UtcNow > x.ExpireDate).ToListAsync();
             foreach (TempBan ban in Unbans)
             {
                 //find and unban

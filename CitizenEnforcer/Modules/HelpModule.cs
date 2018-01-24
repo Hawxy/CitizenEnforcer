@@ -39,7 +39,7 @@ namespace CitizenEnforcer.Modules
             await ReplyAsync(
                 $"{Format.Bold("Info")}\n" +
                 "- Developed by Hawx\n" +
-                "- Github: TODO \n" +
+                "- Github: https://github.com/Hawxy/CitizenEnforcer \n" +
                 $"- Library: Discord.Net ({DiscordConfig.Version})\n" +
                 $"- Runtime: .NET Core 2.0 {RuntimeInformation.OSArchitecture}\n" +
                 $"- Uptime: {GetUptime()}\n\n" +
@@ -52,6 +52,15 @@ namespace CitizenEnforcer.Modules
             );
             string GetUptime()=> (DateTime.Now - Process.GetCurrentProcess().StartTime).ToString(@"dd\.hh\:mm\:ss");
             string GetHeapSize() => Math.Round(GC.GetTotalMemory(true) / (1024.0 * 1024.0), 2).ToString(CultureInfo.CurrentCulture);
+        }
+
+        [Command("shutdown")]
+        [RequireOwner]
+        public async Task StopBot()
+        {
+            await ReplyAsync("Goodbye!");
+            await Context.Client.StopAsync();
+            Environment.Exit(0);
         }
     }
 }

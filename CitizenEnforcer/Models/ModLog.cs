@@ -18,7 +18,7 @@ namespace CitizenEnforcer.Models
             UserName = FormatUtilities.GetFullName(user);
             ModId = context.User.Id;
             ModName = FormatUtilities.GetFullName(context.User);
-            DateTime = DateTime.Now;
+            DateTime = DateTimeOffset.UtcNow;
             InfractionType = type;
             Reason = reason;
         }
@@ -38,7 +38,7 @@ namespace CitizenEnforcer.Models
         [Required]
         public string ModName { get; set; }
         [Required]
-        public DateTime DateTime { get; set; }
+        public DateTimeOffset DateTime { get; set; }
         [Required]
         public InfractionType InfractionType { get; set; }
         public string Reason { get; set; }

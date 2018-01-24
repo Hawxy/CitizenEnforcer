@@ -8,7 +8,6 @@ namespace CitizenEnforcer.Models
         public ulong ModLogDBId { get; set; }
         public ModLog ModLog { get; set; }
         public bool TempBanActive { get; set; }
-        public DateTime ExpireDate { get; set; }
-
+        public DateTimeOffset ExpireDate { get; set; }
     }
 }

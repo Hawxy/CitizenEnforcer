@@ -63,6 +63,7 @@ namespace CitizenEnforcer
                 .AddSingleton<CommandHandler>()
                 .AddSingleton<EditDeleteLogger>()
                 .AddSingleton<InteractiveService>()
+                .AddSingleton<LookupService>()
                 .AddSingleton<ModerationService>()
                 .AddSingleton<TempBanTimer>()
                 .AddSingleton<Helper>()
