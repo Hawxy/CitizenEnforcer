@@ -8,6 +8,11 @@ namespace CitizenEnforcer.Context
     public class BotContext : DbContext
     {
         private readonly Configuration _configuration;
+
+        public BotContext()
+        {
+        }
+
         public BotContext(Configuration configuration)
         {
             _configuration = configuration;
@@ -20,7 +25,7 @@ namespace CitizenEnforcer.Context
         //Database encryption is required by Discord's bot ToS.
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            if (string.IsNullOrWhiteSpace(_configuration.DBPassword))
+            if (string.IsNullOrWhiteSpace(_configuration?.DBPassword))
                 optionsBuilder.UseSqlite("Data Source=SCModBot.db");
             else
                 optionsBuilder.UseSqlite(InitializeSQLiteConnection());
