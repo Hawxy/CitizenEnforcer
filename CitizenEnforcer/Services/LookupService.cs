@@ -22,15 +22,16 @@ namespace CitizenEnforcer.Services
         public async Task LookupUser(SocketCommandContext context, IUser user)
         {
             var foundLogs = await _botContext.ModLogs.Include(z=> z.TempBan).Where(x => x.UserId == user.Id && x.GuildId == context.Guild.Id).ToListAsync();
-            if (foundLogs == null)
+            bool currentlybanned = (await context.Guild.GetBansAsync()).Any(x=> x.User.Id == user.Id);
+            if (foundLogs.Count == 0)
             {
-                await context.Channel.SendMessageAsync("No previous moderator actions have been found for this user");
+                await context.Channel.SendMessageAsync($"No previous moderator actions have been found for this user. Currently banned: {currentlybanned}");
                 return;
             }
             var highestInfraction = foundLogs.Max(x => x.InfractionType);
             var caseIDs = foundLogs.Select(x => x.ModLogCaseID).ToList();
 
-            var builder = FormatUtilities.GetUserLookupBuilder(user, caseIDs, highestInfraction);
+            var builder = FormatUtilities.GetUserLookupBuilder(user, caseIDs, highestInfraction, currentlybanned);
 
             await context.Channel.SendMessageAsync("", embed: builder.Build());
         }

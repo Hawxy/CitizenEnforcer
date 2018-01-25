@@ -128,15 +128,15 @@ namespace CitizenEnforcer.Modules
             await ReplyAsync("Unable to find field");
         }
 
-        [Group("loggingchannels")]
+        [Group("registeredchannels")]
         [RequireInitializedAccessible(InitializedType.Basic)]
-        public class LoggingChannels : ModuleBase<SocketCommandContext>
+        public class RegisteredChannels : ModuleBase<SocketCommandContext>
         {
             public BotContext _botContext { get; set; }
 
             [Command]
-            [Summary("Lists all currently logged channels")]
-            public async Task LoggingChannelsList()
+            [Summary("Lists all currently registered channels")]
+            public async Task RegisteredChannelsList()
             {
                 var currentchannels = await _botContext.RegisteredChannels.Include(x => x.Guild).Where(x => x.GuildId == Context.Guild.Id).ToListAsync();
                 StringBuilder builder = new StringBuilder("Currently tracked channels:\n");
@@ -151,7 +151,7 @@ namespace CitizenEnforcer.Modules
 
             [Command("add")]
             [Summary("Adds additional channels to monitor for edit/deletes")]
-            public async Task AddLoggingChannels(params IGuildChannel[] channels)
+            public async Task AddRegisteredChannels(params IGuildChannel[] channels)
             {
                 var currentchannels = await _botContext.RegisteredChannels.Include(x => x.Guild).Where(x => x.GuildId == Context.Guild.Id).ToListAsync();
                 foreach (IGuildChannel guildChannel in channels)
@@ -164,7 +164,7 @@ namespace CitizenEnforcer.Modules
             }
 
             [Command("remove")]
-            [Summary("Removes logging channels from being tracked")]
+            [Summary("Removes channels from monitoring list")]
             public async Task RemoveLoggingChannels(params IGuildChannel[] channels)
             {
                 var currentchannels = await _botContext.RegisteredChannels.Include(x => x.Guild).Where(x => x.GuildId == Context.Guild.Id).ToListAsync();

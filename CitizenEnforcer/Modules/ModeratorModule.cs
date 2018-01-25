@@ -19,7 +19,6 @@ namespace CitizenEnforcer.Modules
         public BotContext _botContext { get; set; }
         public InteractiveService _interactiveService { get; set; }
         public ModerationService _moderationService { get; set; }
-        public LookupService _lookupService { get; set; }
 
         [Command("warn")]
         [Alias("w")]
@@ -96,22 +95,5 @@ namespace CitizenEnforcer.Modules
                 await _interactiveService.ReplyAndDeleteAsync(Context, "<:thumbsup:338616449826291714>", timeout: TimeSpan.FromSeconds(5));
             }
         }
-
-        [Command("lookupuser")]
-        [Alias("lookupu", "lu")]
-        [Priority(0)]
-        [Summary("Finds previous cases of a given user")]
-        public async Task LookupUser(IGuildUser user) => await _lookupService.LookupUser(Context, user);
-
-        [Command("lookupuser")]
-        [Alias("lookupu","lu")]
-        [Priority(1)]
-        [Summary("Find previous cases of a banned user")]
-        public async Task LookupUser(IBan bannedUser) => await _lookupService.LookupUser(Context, bannedUser.User);
-
-        [Command("lookupcase")]
-        [Alias("lookupc", "lc")]
-        [Summary("Displays a stored case")]
-        public async Task LookupCase(ulong caseID) => await _lookupService.LookupCase(Context, caseID);
     }
 }

@@ -146,16 +146,16 @@ namespace CitizenEnforcer.Common
             return manbuilder;
         }
 
-        public static EmbedBuilder GetUserLookupBuilder(IUser user, List<ulong> cases, InfractionType infraction)
+        public static EmbedBuilder GetUserLookupBuilder(IUser user, List<ulong> cases, InfractionType infraction, bool isBanned)
         {
             var manbuilder =
                 new EmbedBuilder().WithColor(new Color(2, 136, 209))
-                    .WithCurrentTimestamp().WithTitle($"User Lookup - {GetFullName(user)}").WithDescription("---------------------");
-
+                    .WithCurrentTimestamp().WithTitle($"User Lookup - {GetFullName(user)} - {user.Id}").WithDescription("---------------------");
+           
             manbuilder.AddField(z =>
             {
-                z.Name = "UserID";
-                z.Value = user.Id;
+                z.Name = "Currently Banned";
+                z.Value = isBanned;
                 z.IsInline = true;
             });
             manbuilder.AddField(z =>
@@ -167,8 +167,10 @@ namespace CitizenEnforcer.Common
             manbuilder.AddField(z =>
             {
                 z.Name = "Related Case IDs:";
-                z.Value = $"```{string.Join("\n", cases)}```";
+                z.Value = $"```\n{string.Join("\n", cases)}```";
+                z.IsInline = false;
             });
+
 
             return manbuilder;
         }
