@@ -50,6 +50,8 @@ namespace CitizenEnforcer.Services
                 //otherwise its a editing event
                 else
                 {
+                    //prevent embeds from causing a pointless log
+                    if (currentMessage.Content == message.Content) return;
                     await loggingchannel.SendMessageAsync("**Message Edited**\n" +
                                                           $"```Author: {message.Author.Username}#{message.Author.DiscriminatorValue} | {message.Author.Id}\n" +
                                                           $"Posted at: {message.Timestamp.DateTime} UTC in #{channel.Name}\n" +
