@@ -2,6 +2,7 @@
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
+using CitizenEnforcer.Common;
 using CitizenEnforcer.Context;
 using CitizenEnforcer.Services;
 using CitizenEnforcer.Settings;
@@ -33,6 +34,7 @@ namespace CitizenEnforcer
                 MessageCacheSize = 1000
             });
             _config = BuildConfig();
+            FormatUtilities.Prefix = _config.Prefix;
 
             var services = ConfigureServices();
             await services.GetRequiredService<CommandHandler>().InitializeAsync();

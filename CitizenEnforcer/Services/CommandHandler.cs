@@ -62,11 +62,7 @@ namespace CitizenEnforcer.Services
                         await _helper.HelpAsync(context, messagecontent[0].Replace(_config.Prefix, string.Empty));
                         break;
                     case CommandError.ObjectNotFound:
-                        await context.Channel.SendMessageAsync(result.ErrorReason);
-                        break;
                     case CommandError.MultipleMatches:
-                        await context.Channel.SendMessageAsync("Multiple matches were found: Try mentioning the user instead!");
-                        break;
                     case CommandError.UnmetPrecondition:
                         await context.Channel.SendMessageAsync(result.ErrorReason);
                         break;

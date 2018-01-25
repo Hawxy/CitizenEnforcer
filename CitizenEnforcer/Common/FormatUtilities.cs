@@ -7,6 +7,7 @@ namespace CitizenEnforcer.Common
 {
     public static class FormatUtilities
     {
+        public static string Prefix;
         public static string GetFullName(IUser user) => $"{user.Username}#{user.Discriminator}";
 
         public static EmbedBuilder GetWarnBuilder(IUser user, IUser mod, ulong caseID, string reason, DateTimeOffset postedDate)
@@ -30,7 +31,7 @@ namespace CitizenEnforcer.Common
             manbuilder.AddField(z =>
             {
                 z.Name = "Reason";
-                z.Value = reason ?? $"Responsible Moderator, please type ``^r {caseID}`` to add a reason";
+                z.Value = reason ?? $"Responsible Moderator, please type ``{Prefix}r {caseID}`` to add a reason";
             });
 
             return manbuilder;
@@ -57,7 +58,7 @@ namespace CitizenEnforcer.Common
             manbuilder.AddField(z =>
             {
                 z.Name = "Reason";
-                z.Value = reason ?? $"Responsible Moderator, please type ``^r {caseID}`` to add a reason";
+                z.Value = reason ?? $"Responsible Moderator, please type ``{Prefix}r {caseID}`` to add a reason";
             });
             return manbuilder;
         }
@@ -88,7 +89,7 @@ namespace CitizenEnforcer.Common
             manbuilder.AddField(z =>
             {
                 z.Name = "Reason";
-                z.Value = reason ?? $"Responsible Moderator, please type ``^r {caseID}`` to add a reason";
+                z.Value = reason ?? $"Responsible Moderator, please type ``{Prefix}r {caseID}`` to add a reason";
             });
 
             return manbuilder;
@@ -115,7 +116,7 @@ namespace CitizenEnforcer.Common
             manbuilder.AddField(z =>
             {
                 z.Name = "Reason";
-                z.Value = reason ?? $"Responsible Moderator, please type ``^r {caseID}`` to add a reason";
+                z.Value = reason ?? $"Responsible Moderator, please type ``{Prefix}r {caseID}`` to add a reason";
             });
 
             return manbuilder;
