@@ -9,9 +9,7 @@ namespace CitizenEnforcer.Context
     {
         private readonly Configuration _configuration;
 
-        public BotContext()
-        {
-        }
+        public BotContext(){}
 
         public BotContext(Configuration configuration)
         {

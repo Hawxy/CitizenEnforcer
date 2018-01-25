@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using CitizenEnforcer.Context;
 using CitizenEnforcer.InteractiveCriterion;
@@ -9,6 +10,7 @@ using Discord;
 using Discord.Addons.Interactive;
 using Discord.Commands;
 using Microsoft.EntityFrameworkCore;
+// ReSharper disable SimplifyLinqExpression
 
 namespace CitizenEnforcer.Modules
 {
@@ -124,6 +126,56 @@ namespace CitizenEnforcer.Modules
                 }
             }
             await ReplyAsync("Unable to find field");
+        }
+
+        [Group("loggingchannels")]
+        [RequireInitializedAccessible(InitializedType.Basic)]
+        public class LoggingChannels : ModuleBase<SocketCommandContext>
+        {
+            public BotContext _botContext { get; set; }
+
+            [Command]
+            [Summary("Lists all currently logged channels")]
+            public async Task LoggingChannelsList()
+            {
+                var currentchannels = await _botContext.RegisteredChannels.Include(x => x.Guild).Where(x => x.GuildId == Context.Guild.Id).ToListAsync();
+                StringBuilder builder = new StringBuilder("Currently tracked channels:\n");
+
+                foreach (var registeredChannel in currentchannels)
+                {
+                    var channel = Context.Guild.GetChannel(registeredChannel.ChannelId);
+                    builder.Append($"{channel.Name}");
+                }
+                await ReplyAsync(builder.ToString());
+            }
+
+            [Command("add")]
+            [Summary("Adds additional channels to monitor for edit/deletes")]
+            public async Task AddLoggingChannels(params IGuildChannel[] channels)
+            {
+                var currentchannels = await _botContext.RegisteredChannels.Include(x => x.Guild).Where(x => x.GuildId == Context.Guild.Id).ToListAsync();
+                foreach (IGuildChannel guildChannel in channels)
+                {
+                    if (!currentchannels.Any(x => x.ChannelId == guildChannel.GuildId))
+                        _botContext.RegisteredChannels.Add(new RegisteredChannel(guildChannel.Id, Context.Guild.Id));
+                }
+                await _botContext.SaveChangesAsync();
+                await ReplyAsync("<:thumbsup:338616449826291714>");
+            }
+
+            [Command("remove")]
+            [Summary("Removes logging channels from being tracked")]
+            public async Task RemoveLoggingChannels(params IGuildChannel[] channels)
+            {
+                var currentchannels = await _botContext.RegisteredChannels.Include(x => x.Guild).Where(x => x.GuildId == Context.Guild.Id).ToListAsync();
+                foreach (var registeredChannel in currentchannels)
+                {
+                    if (channels.Any(x => x.Id == registeredChannel.ChannelId))
+                        _botContext.Remove(registeredChannel);
+                }
+                await _botContext.SaveChangesAsync();
+                await ReplyAsync("<:thumbsup:338616449826291714>");
+            }
         }
     }
 }

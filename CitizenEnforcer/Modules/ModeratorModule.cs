@@ -93,7 +93,7 @@ namespace CitizenEnforcer.Modules
 
                 //lets be nice and cleanup afterwards
                 await Context.Message.DeleteAsync();
-                await _interactiveService.ReplyAndDeleteAsync(Context, Emote.Parse("<:thumbsup:338616449826291714>").ToString(), timeout: TimeSpan.FromSeconds(5));
+                await _interactiveService.ReplyAndDeleteAsync(Context, "<:thumbsup:338616449826291714>", timeout: TimeSpan.FromSeconds(5));
             }
         }
 
