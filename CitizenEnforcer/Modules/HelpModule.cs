@@ -39,7 +39,7 @@ namespace CitizenEnforcer.Modules
             await ReplyAsync(
                 $"{Format.Bold("Info")}\n" +
                 "- Developed by Hawx\n" +
-                "- Github: https://github.com/Hawxy/CitizenEnforcer \n" +
+                "- Github: `https://github.com/Hawxy/CitizenEnforcer` \n" +
                 $"- Library: Discord.Net ({DiscordConfig.Version})\n" +
                 $"- Runtime: .NET Core 2.0 {RuntimeInformation.OSArchitecture}\n" +
                 $"- Uptime: {GetUptime()}\n\n" +

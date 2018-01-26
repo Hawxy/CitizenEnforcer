@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
+using CitizenEnforcer.Common;
 using CitizenEnforcer.Context;
 using CitizenEnforcer.Settings;
 using Discord;
@@ -42,7 +43,7 @@ namespace CitizenEnforcer.Services
                 if (currentMessage == null)
                 {
                     await loggingchannel.SendMessageAsync("**Message Deleted**\n" +
-                                                          $"```Author: {message.Author.Username}#{message.Author.DiscriminatorValue} | {message.Author.Id}\n" +
+                                                          $"```Author: {FormatUtilities.GetFullName(message.Author)} | {message.Author.Id}\n" +
                                                           $"Posted at: {message.Timestamp.DateTime} UTC in #{channel.Name}\n" +
                                                           $"Content: {(string.IsNullOrWhiteSpace(message.Content) ? "None" : message.Content)}\n" +
                                                           $"Attachment: {message.Attachments.ElementAtOrDefault(0)?.Url ?? "None"}```");
@@ -53,7 +54,7 @@ namespace CitizenEnforcer.Services
                     //prevent embeds from causing a pointless log
                     if (currentMessage.Content == message.Content) return;
                     await loggingchannel.SendMessageAsync("**Message Edited**\n" +
-                                                          $"```Author: {message.Author.Username}#{message.Author.DiscriminatorValue} | {message.Author.Id}\n" +
+                                                          $"```Author: {FormatUtilities.GetFullName(message.Author)} | {message.Author.Id}\n" +
                                                           $"Posted at: {message.Timestamp.DateTime} UTC in #{channel.Name}\n" +
                                                           $"Original Content: {(string.IsNullOrWhiteSpace(message.Content) ? "None" : message.Content)}\n" +
                                                           $"Updated Content: {(string.IsNullOrWhiteSpace(currentMessage.Content) ? "None" : currentMessage.Content)}\n" +

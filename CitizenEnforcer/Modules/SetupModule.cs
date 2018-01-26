@@ -144,8 +144,10 @@ namespace CitizenEnforcer.Modules
                 foreach (var registeredChannel in currentchannels)
                 {
                     var channel = Context.Guild.GetChannel(registeredChannel.ChannelId);
-                    builder.Append($"{channel.Name}");
+                    builder.Append($"{(channel as ITextChannel)?.Mention}, ");
                 }
+
+                builder.Length -= 2;
                 await ReplyAsync(builder.ToString());
             }
 
