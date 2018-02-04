@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using CitizenEnforcer.Models;
 using Discord;
 
@@ -146,7 +147,7 @@ namespace CitizenEnforcer.Common
             return manbuilder;
         }
 
-        public static EmbedBuilder GetUserLookupBuilder(IUser user, List<ulong> cases, InfractionType infraction, bool isBanned)
+        public static EmbedBuilder GetUserLookupBuilder(IUser user, List<ModLog> cases, InfractionType infraction, bool isBanned)
         {
             var manbuilder =
                 new EmbedBuilder().WithColor(new Color(2, 136, 209))
@@ -164,13 +165,16 @@ namespace CitizenEnforcer.Common
                 z.Value = infraction.ToString();
                 z.IsInline = true;
             });
+
+            StringBuilder builder = new StringBuilder();
+            cases.ForEach(x=> builder.Append($"\n{x.ModLogCaseID} - {x.InfractionType}"));  
+
             manbuilder.AddField(z =>
             {
                 z.Name = "Related Case IDs:";
-                z.Value = $"```\n{string.Join("\n", cases)}```";
+                z.Value = $"```{builder.ToString()}```";
                 z.IsInline = false;
             });
-
 
             return manbuilder;
         }

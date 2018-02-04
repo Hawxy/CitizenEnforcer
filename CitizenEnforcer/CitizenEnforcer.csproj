@@ -19,8 +19,8 @@
 
   <ItemGroup>
     <PackageReference Include="Discord.Addons.Interactive" Version="1.0.1" />
-    <PackageReference Include="Discord.Net.Commands" Version="2.0.0-beta-00880" />
-    <PackageReference Include="Discord.Net.WebSocket" Version="2.0.0-beta-00880" />
+    <PackageReference Include="Discord.Net.Commands" Version="2.0.0-beta-00882" />
+    <PackageReference Include="Discord.Net.WebSocket" Version="2.0.0-beta-00882" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="2.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite.Core" Version="2.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="2.0.1" />

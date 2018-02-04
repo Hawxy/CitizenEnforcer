@@ -29,9 +29,8 @@ namespace CitizenEnforcer.Services
                 return;
             }
             var highestInfraction = foundLogs.Max(x => x.InfractionType);
-            var caseIDs = foundLogs.Select(x => x.ModLogCaseID).ToList();
 
-            var builder = FormatUtilities.GetUserLookupBuilder(user, caseIDs, highestInfraction, currentlybanned);
+            var builder = FormatUtilities.GetUserLookupBuilder(user, foundLogs, highestInfraction, currentlybanned);
 
             await context.Channel.SendMessageAsync("", embed: builder.Build());
         }

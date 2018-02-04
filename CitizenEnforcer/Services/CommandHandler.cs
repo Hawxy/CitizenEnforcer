@@ -46,18 +46,15 @@ namespace CitizenEnforcer.Services
             var result = await _commandService.ExecuteAsync(context, argPos, _provider);
             if (result.Error.HasValue)
             {
-                string[] messagecontent;
                 switch (result.Error)
                 {
                     case CommandError.UnknownCommand:
                         break;
                     case CommandError.ParseFailed:
-                        messagecontent = message.ToString().Split();
-                        await context.Channel.SendMessageAsync("Incorrect arguments, showing helper:");
-                        await _helper.HelpAsync(context, messagecontent[0].Replace(_config.Prefix, string.Empty));
+                        await context.Channel.SendMessageAsync(result.ErrorReason);
                         break;
                     case CommandError.BadArgCount:
-                        messagecontent = message.ToString().Split();
+                        string[] messagecontent = message.ToString().Split();
                         await context.Channel.SendMessageAsync("Incorrect command usage, showing helper:");
                         await _helper.HelpAsync(context, messagecontent[0].Replace(_config.Prefix, string.Empty));
                         break;

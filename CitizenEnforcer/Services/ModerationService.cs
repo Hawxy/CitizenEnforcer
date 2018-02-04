@@ -5,6 +5,7 @@ using CitizenEnforcer.Context;
 using CitizenEnforcer.Models;
 using Discord;
 using Discord.Commands;
+using Discord.Net;
 using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
 
@@ -33,7 +34,8 @@ namespace CitizenEnforcer.Services
             await _botContext.SaveChangesAsync();
             await context.Message.DeleteAsync();
 
-            await SendMessageToAnnounce(context.Guild, $"***{user.Mention}, you have been officially warned for your actions***");
+            await SendMessageToAnnounce(context.Guild, $"***{FormatUtilities.GetFullName(user)}, has been officially warned for his actions***");
+            await SendMessageToUser(user, $"You have been warned on the guild {context.Guild.Name} for: {reason}");
         }
         public async Task KickUser(SocketCommandContext context, IGuildUser user, string reason)
         {
@@ -154,6 +156,19 @@ namespace CitizenEnforcer.Services
                 return;
             var channel = guild.GetTextChannel(foundGuild.PublicAnnouceChannel);
             await channel.SendMessageAsync(message);
+        }
+
+        public async Task SendMessageToUser(IUser user, string message)
+        {
+            try
+            {
+                var DMChannel = await user.GetOrCreateDMChannelAsync();
+                await DMChannel.SendMessageAsync(message);
+            }
+            //Can't really do much here. Logging the error would get too spammy in a moderation context.
+            catch (HttpException)
+            {
+            }
         }
 
         private async Task<ulong> GenerateNewCaseID(ulong GuildID)
