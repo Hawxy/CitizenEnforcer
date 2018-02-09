@@ -34,7 +34,7 @@ namespace CitizenEnforcer.Services
             await _botContext.SaveChangesAsync();
             await context.Message.DeleteAsync();
 
-            await SendMessageToAnnounce(context.Guild, $"***{FormatUtilities.GetFullName(user)}, has been officially warned for his actions***");
+            await SendMessageToAnnounce(context.Guild, $"***{FormatUtilities.GetFullName(user)} has received a warning for his actions***");
             await SendMessageToUser(user, $"You have been warned on the guild {context.Guild.Name} for: {reason}");
         }
         public async Task KickUser(SocketCommandContext context, IGuildUser user, string reason)
