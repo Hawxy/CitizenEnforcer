@@ -10,6 +10,8 @@ using Discord;
 using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.WebSocket;
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
@@ -69,7 +71,13 @@ namespace CitizenEnforcer
                 .AddSingleton<ModerationService>()
                 .AddSingleton<TempBanTimer>()
                 .AddSingleton<Helper>()
-                .AddDbContext<BotContext>(ServiceLifetime.Transient)
+                .AddDbContext<BotContext>(options =>
+                {
+                    if (string.IsNullOrWhiteSpace(_config?.DBPassword))
+                        options.UseSqlite("Data Source=SCModBot.db");
+                    else
+                        options.UseSqlite(InitializeSQLiteConnection());
+                }, ServiceLifetime.Transient)
                 .BuildServiceProvider();
         }
 
@@ -119,6 +127,20 @@ namespace CitizenEnforcer
             Console.WriteLine();
             return pass;
         }
+
+        private SqliteConnection InitializeSQLiteConnection()
+        {
+            var connection = new SqliteConnection("Data Source=SCModBot.db");
+            connection.Open();
+            var command = connection.CreateCommand();
+            command.CommandText = "SELECT quote($password);";
+            command.Parameters.AddWithValue("$password", _config.DBPassword);
+            command.CommandText = "PRAGMA key = " + command.ExecuteScalar();
+            command.Parameters.Clear();
+            command.ExecuteNonQuery();
+            return connection;
+        }
+
         private static LogEventLevel EventLevelFromSeverity(LogSeverity severity) => (LogEventLevel)Math.Abs((int)severity - 5);
     }
 

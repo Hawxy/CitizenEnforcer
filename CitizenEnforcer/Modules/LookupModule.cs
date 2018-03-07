@@ -11,7 +11,7 @@ namespace CitizenEnforcer.Modules
     [Alias("l")]
     [RequireContext(ContextType.Guild)]
     [RequireUserPermission(GuildPermission.BanMembers)]
-    [RequireInitializedAccessible(InitializedType.All)]
+    [RequireInitialized(InitializedType.All)]
     public class LookupModule : ModuleBase<SocketCommandContext>
     {
         public BotContext _botContext { get; set; }

@@ -30,7 +30,7 @@ namespace CitizenEnforcer.Services
         public async Task InitializeAsync()
         {
             _commandService.AddTypeReader<IBan>(new IBanTypeReader());
-            await _commandService.AddModulesAsync(Assembly.GetEntryAssembly());
+            await _commandService.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
         }
 
         private async Task HandleMessage(SocketMessage incmsg)

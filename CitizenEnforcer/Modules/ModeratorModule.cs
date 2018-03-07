@@ -13,7 +13,7 @@ namespace CitizenEnforcer.Modules
 {
     [RequireContext(ContextType.Guild)]
     [RequireUserPermission(GuildPermission.BanMembers)]
-    [RequireInitializedAccessible(InitializedType.All)]
+    [RequireInitialized(InitializedType.All)]
     public class ModeratorModule : ModuleBase<SocketCommandContext>
     {
         public BotContext _botContext { get; set; }

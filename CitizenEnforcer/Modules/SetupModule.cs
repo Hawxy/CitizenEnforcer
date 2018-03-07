@@ -89,7 +89,7 @@ namespace CitizenEnforcer.Modules
         }
 
         [Command]
-        [RequireInitializedAccessible(InitializedType.Basic)]
+        [RequireInitialized(InitializedType.Basic)]
         [Summary("Allows you to set LoggingChannel, ModerationChannel and PublicAnnounceChannel")]
         public async Task ChangeChannel(string changeField, ITextChannel channel)
         {
@@ -109,7 +109,7 @@ namespace CitizenEnforcer.Modules
         }
 
         [Command]
-        [RequireInitializedAccessible(InitializedType.Basic)]
+        [RequireInitialized(InitializedType.Basic)]
         [Summary("Allows you to set IsEditLoggingEnabled, IsModerationEnabled and IsPublicAnnounceEnabled")]
         public async Task ChangeBool(string changeField, bool modify)
         {
@@ -129,7 +129,7 @@ namespace CitizenEnforcer.Modules
         }
 
         [Group("registeredchannels")]
-        [RequireInitializedAccessible(InitializedType.Basic)]
+        [RequireInitialized(InitializedType.Basic)]
         public class RegisteredChannels : ModuleBase<SocketCommandContext>
         {
             public BotContext _botContext { get; set; }
