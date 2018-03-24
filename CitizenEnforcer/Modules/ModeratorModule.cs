@@ -23,7 +23,7 @@ namespace CitizenEnforcer.Modules
         [Command("warn")]
         [Alias("w")]
         [Summary("Logs a user warning. Supports an optional specified reason")]
-        public async Task Warn([NotSelf]IGuildUser user, [Remainder] string reason = null) => await _moderationService.WarnUser(Context, user, reason);
+        public async Task Warn([NotSelf]IGuildUser user, [Remainder] string reason) => await _moderationService.WarnUser(Context, user, reason);
 
         [Command("kick")]
         [Alias("k")]

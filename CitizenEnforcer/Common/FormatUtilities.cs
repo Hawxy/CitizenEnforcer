@@ -85,7 +85,7 @@ namespace CitizenEnforcer.Common
             manbuilder.AddField(z =>
             {
                 z.Name = "Expiry Date & Time";
-                z.Value = $"{endTime} UTC";
+                z.Value = $"{endTime.DateTime} UTC";
             });
             manbuilder.AddField(z =>
             {

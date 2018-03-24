@@ -34,8 +34,8 @@ namespace CitizenEnforcer.Services
             await _botContext.SaveChangesAsync();
             await context.Message.DeleteAsync();
 
-            await SendMessageToAnnounce(context.Guild, $"***{FormatUtilities.GetFullName(user)} has received a warning for his actions***");
-            await SendMessageToUser(user, $"You have been warned on the guild {context.Guild.Name} for: {reason}");
+            await SendMessageToAnnounce(context.Guild, $"***{FormatUtilities.GetFullName(user)} has received an official warning***");
+            await SendMessageToUser(user, $"You have been warned on the guild ``{context.Guild.Name}`` for: ``{reason}``");
         }
         public async Task KickUser(SocketCommandContext context, IGuildUser user, string reason)
         {
@@ -46,6 +46,8 @@ namespace CitizenEnforcer.Services
             await _botContext.SaveChangesAsync();
 
             var builder = FormatUtilities.GetKickBuilder(user, context.User, caseID, reason, logEntry.DateTime);
+
+            await SendMessageToUser(user, $"You have been kicked from the guild ``{context.Guild.Name}`` {(string.IsNullOrWhiteSpace(reason) ? string.Empty : $"for: ``{reason}``" )}");
 
             //Kick
             await user.KickAsync();
@@ -69,13 +71,13 @@ namespace CitizenEnforcer.Services
             {
                 ModLog = logEntry,
                 TempBanActive = true,
-                ExpireDate = DateTime.Now.AddDays(3)
+                ExpireDate = DateTimeOffset.UtcNow.AddDays(3)
             };
 
             await _botContext.TempBans.AddAsync(tempBan);
 
-            var builder = FormatUtilities.GetTempBanBuilder(user, context.User, caseID, reason, logEntry.DateTime, tempBan.ExpireDate.ToUniversalTime());
-
+            var builder = FormatUtilities.GetTempBanBuilder(user, context.User, caseID, reason, logEntry.DateTime, tempBan.ExpireDate);
+            await SendMessageToUser(user, $"You have been temporarily banned from the guild ``{context.Guild.Name}`` {(string.IsNullOrWhiteSpace(reason) ? string.Empty : $"for: ``{reason}``")}\nThis ban will expire on ``{tempBan.ExpireDate.DateTime} UTC``");
             //Ban
             await context.Guild.AddBanAsync(user);
 
@@ -104,6 +106,7 @@ namespace CitizenEnforcer.Services
             }
             else
             {
+                await SendMessageToUser(user, $"You have been permanently banned from the guild ``{context.Guild.Name}`` {(string.IsNullOrWhiteSpace(reason) ? string.Empty : $"for: ``{reason}``")}");
                 if (isHardBan)
                     await context.Guild.AddBanAsync(user, 2);
                 else
@@ -166,9 +169,7 @@ namespace CitizenEnforcer.Services
                 await DMChannel.SendMessageAsync(message);
             }
             //Can't really do much here. Logging the error would get too spammy in a moderation context.
-            catch (HttpException)
-            {
-            }
+            catch (HttpException){}
         }
 
         private async Task<ulong> GenerateNewCaseID(ulong GuildID)
