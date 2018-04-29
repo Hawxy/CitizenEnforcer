@@ -102,7 +102,7 @@ namespace CitizenEnforcer.Common
                 new EmbedBuilder().WithColor(new Color(229, 57, 53))
                     .WithTimestamp(postedDate).WithTitle($"Banned User - Entry ID: {caseID}").WithDescription("---------------------");
             if (mod == null)
-                manbuilder.WithAuthor("Unknown Author");
+                manbuilder.WithAuthor("Unknown Moderator");
             else
                 manbuilder.WithAuthor(mod);
             
