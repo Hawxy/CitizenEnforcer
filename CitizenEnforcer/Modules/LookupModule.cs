@@ -21,18 +21,18 @@ namespace CitizenEnforcer.Modules
         [Alias("u")]
         [Priority(0)]
         [Summary("Finds previous cases of a given user")]
-        public async Task LookupUser(IGuildUser user) => await _lookupService.LookupUser(Context, user);
+        public Task LookupUser(IGuildUser user) => _lookupService.LookupUser(Context, user);
 
         [Command("user")]
         [Alias("u")]
         [Priority(1)]
         [Summary("Find previous cases of a banned user")]
-        public async Task LookupUser(IBan bannedUser) => await _lookupService.LookupUser(Context, bannedUser.User);
+        public Task LookupUser(IBan bannedUser) => _lookupService.LookupUser(Context, bannedUser.User);
 
         [Command("case")]
         [Alias("c")]
         [Summary("Displays a stored case")]
-        public async Task LookupCase(ulong caseID) => await _lookupService.LookupCase(Context, caseID);
+        public Task LookupCase(ulong caseID) => _lookupService.LookupCase(Context, caseID);
 
     }
 }

@@ -68,7 +68,7 @@ namespace CitizenEnforcer.Common
         {
             var manbuilder =
                 new EmbedBuilder().WithColor(new Color(251, 140, 0))
-                    .WithAuthor(mod).WithTimestamp(postedDate).WithTitle($"User Temp-Banned - Entry ID: {caseID}").WithDescription("---------------------");
+                    .WithAuthor(mod).WithTimestamp(postedDate).WithTitle($"Temp-Banned User - Entry ID: {caseID}").WithDescription("---------------------");
 
             manbuilder.AddField(z =>
             {
@@ -100,7 +100,12 @@ namespace CitizenEnforcer.Common
         {
             var manbuilder =
                 new EmbedBuilder().WithColor(new Color(229, 57, 53))
-                    .WithAuthor(mod).WithTimestamp(postedDate).WithTitle($"User Banned - Entry ID: {caseID}").WithDescription("---------------------");
+                    .WithTimestamp(postedDate).WithTitle($"Banned User - Entry ID: {caseID}").WithDescription("---------------------");
+            if (mod == null)
+                manbuilder.WithAuthor("Unknown Author");
+            else
+                manbuilder.WithAuthor(mod);
+            
 
             manbuilder.AddField(z =>
             {
@@ -127,7 +132,7 @@ namespace CitizenEnforcer.Common
         {
             var manbuilder =
                 new EmbedBuilder().WithColor(new Color(56, 142, 60))
-                    .WithCurrentTimestamp().WithTitle($"{titleReason} - User Unbanned").WithDescription("---------------------");
+                    .WithCurrentTimestamp().WithTitle($"{titleReason} - Unbanned User").WithDescription("---------------------");
             if (resMod != null)
                 manbuilder.WithAuthor(resMod);
 

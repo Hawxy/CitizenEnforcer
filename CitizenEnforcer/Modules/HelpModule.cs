@@ -48,7 +48,7 @@ namespace CitizenEnforcer.Modules
                 $"- Heap Size: {GetHeapSize()} MB\n" +
                 $"- Guilds: {Context.Client.Guilds.Count}\n" +
                 $"- Channels: {Context.Client.Guilds.Sum(g => g.Channels.Count)}\n" +
-                $"- Users: {Context.Client.Guilds.Sum(g => g.Users.Count)}" 
+                $"- Users: {Context.Client.Guilds.Sum(g => g.MemberCount)}" 
             );
             string GetUptime()=> (DateTime.Now - Process.GetCurrentProcess().StartTime).ToString(@"dd\.hh\:mm\:ss");
             string GetHeapSize() => Math.Round(GC.GetTotalMemory(true) / (1024.0 * 1024.0), 2).ToString(CultureInfo.CurrentCulture);

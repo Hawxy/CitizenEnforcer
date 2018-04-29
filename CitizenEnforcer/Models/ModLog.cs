@@ -10,6 +10,7 @@ namespace CitizenEnforcer.Models
     {
         //this db setup isn't perfect, but it'll do for now
         public ModLog(){}
+        //For command-caused logs
         public ModLog(SocketCommandContext context, IUser user, ulong CaseID, InfractionType type, string reason)
         {
             ModLogCaseID = CaseID;
@@ -21,6 +22,18 @@ namespace CitizenEnforcer.Models
             DateTime = DateTimeOffset.UtcNow;
             InfractionType = type;
             Reason = reason;
+        }
+        //For event-caused logs
+        public ModLog(ulong CaseID, ulong GuildID, IUser user, InfractionType type)
+        {
+            ModLogCaseID = CaseID;
+            GuildId = GuildID;
+            UserId = user.Id;
+            UserName = FormatUtilities.GetFullName(user);
+            ModId = 0;
+            ModName = "Unknown";
+            DateTime = DateTimeOffset.UtcNow;
+            InfractionType = type;
         }
         
 
