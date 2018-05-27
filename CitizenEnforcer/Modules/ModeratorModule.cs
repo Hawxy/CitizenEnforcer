@@ -44,14 +44,14 @@ namespace CitizenEnforcer.Modules
         [Summary("Bans a user without deleting message history. Supports an optional specified reason")]
         public Task SoftBan([NotSelf]IGuildUser user, [Remainder] string reason = null) => _moderationService.BanUser(Context, user, reason, false, false);
 
-        [Priority(0)]
+        [Priority(1000)]
         [Command("ban")]
         [Alias("b")]
         [RequireBotPermission(GuildPermission.BanMembers)]
         [Summary("Bans and deletes recent message history. Supports an optional specified reason")]
         public Task Ban([NotSelf]IGuildUser user, [Remainder] string reason = null) => _moderationService.BanUser(Context, user, reason, false, true);
 
-        [Priority(1)]
+        [Priority(500)]
         [Command("ban")]
         [Alias("b")]
         [RequireBotPermission(GuildPermission.BanMembers)]

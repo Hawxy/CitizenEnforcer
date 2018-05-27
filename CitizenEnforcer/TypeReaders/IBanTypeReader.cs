@@ -10,16 +10,15 @@ namespace CitizenEnforcer.TypeReaders
     {
         public override async Task<TypeReaderResult> ReadAsync(ICommandContext context, string input, IServiceProvider services)
         {
-            var bans = await context.Guild.GetBansAsync();
-
             if (ulong.TryParse(input, out ulong result))
             {
-                var ban = bans.FirstOrDefault(x => x.User.Id == result);
+                var ban = context.Guild.GetBanAsync(result);
                 if (ban != null)
                     return TypeReaderResult.FromSuccess(ban);
             }
             else
             {
+                var bans = await context.Guild.GetBansAsync();
                 var banuser = bans.FirstOrDefault(x => x.User.Username == input || FormatUtilities.GetFullName(x.User).Equals(input));
                 if(banuser != null)
                     return TypeReaderResult.FromSuccess(banuser);

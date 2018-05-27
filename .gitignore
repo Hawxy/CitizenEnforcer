@@ -260,3 +260,4 @@ paket-files/
 __pycache__/
 *.pyc
 /CitizenEnforcer/SCModBot.db
+/CitizenEnforcer/Properties/PublishProfiles/FolderProfile.pubxml
