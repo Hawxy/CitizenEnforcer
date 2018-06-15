@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using CitizenEnforcer.Common;
 using CitizenEnforcer.Context;
@@ -6,6 +7,7 @@ using CitizenEnforcer.Models;
 using Discord;
 using Discord.Commands;
 using Discord.Net;
+using Discord.Rest;
 using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
@@ -19,8 +21,8 @@ namespace CitizenEnforcer.Services
         public ModerationService(BotContext botContext, DiscordSocketClient client, IMemoryCache memoryCache)
         {
             _botContext = botContext;
-            client.UserBanned += HandleUserBanned;
             _banCache = memoryCache;
+            client.UserBanned += HandleUserBanned;
         }
 
         private async Task HandleUserBanned(SocketUser bannedUser, SocketGuild guild)
@@ -30,20 +32,26 @@ namespace CitizenEnforcer.Services
 
             if (!await _botContext.Guilds.AnyAsync(x => x.GuildId == guild.Id && x.IsModerationEnabled))
                 return;
-            
+
             var caseID = await GenerateNewCaseID(guild.Id);
-            var logEntry = new ModLog(caseID, guild.Id, bannedUser, InfractionType.Ban);
+            var logs = await guild.GetAuditLogsAsync(5).FlattenAsync();
+            var entry = logs.FirstOrDefault(x => (x.Data as BanAuditLogData)?.Target.Id == bannedUser.Id);
+
+            //if entry isn't null then use the data contained
+            var logEntry = entry != null
+                ? new ModLog(entry.User, guild.Id, bannedUser, caseID, InfractionType.Ban, entry.Reason)
+                : new ModLog(caseID, guild.Id, bannedUser, InfractionType.Ban);
 
             await _botContext.ModLogs.AddAsync(logEntry);
             await _botContext.SaveChangesAsync();
 
-            var builder = FormatUtilities.GetBanBuilder(bannedUser, null, caseID, null, logEntry.DateTime);
+            var builder = FormatUtilities.GetBanBuilder(bannedUser, entry?.User, caseID, entry?.Reason, logEntry.DateTime);
             var message = await SendMessageToModLog(guild, builder);
 
             logEntry.LoggedMessageId = message.Id;
             await _botContext.SaveChangesAsync();
+            await SendMessageToAnnounce(guild, $"***{FormatUtilities.GetFullName(bannedUser)} has been permanently banned from the server***");
         }
-
 
         public async Task WarnUser(SocketCommandContext context, IGuildUser user, string reason)
         {
