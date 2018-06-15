@@ -26,10 +26,7 @@ namespace CitizenEnforcer.Modules
         }
         [Command("help")]
         [Summary("Shows information about a command")]
-        public async Task Help([Remainder]string command)
-        {
-            await _helpservice.HelpAsync(Context, command);
-        }
+        public Task Help([Remainder]string command) => _helpservice.HelpAsync(Context, command);
 
         [Command("info")]
         [Alias("stats")]
@@ -41,7 +38,7 @@ namespace CitizenEnforcer.Modules
                 "- Developed by Hawx\n" +
                 "- Github: `https://github.com/Hawxy/CitizenEnforcer` \n" +
                 $"- Library: Discord.Net ({DiscordConfig.Version})\n" +
-                $"- Runtime: .NET Core 2.0 {RuntimeInformation.OSArchitecture}\n" +
+                $"- Runtime: .NET Core 2.1 {RuntimeInformation.OSArchitecture}\n" +
                 $"- Uptime: {GetUptime()}\n\n" +
 
                 $"{Format.Bold("Stats")}\n" +

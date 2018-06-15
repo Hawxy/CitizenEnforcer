@@ -6,6 +6,7 @@ using CitizenEnforcer.Settings;
 using Discord;
 using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace CitizenEnforcer.Services
 {
@@ -13,18 +14,20 @@ namespace CitizenEnforcer.Services
     {
         private readonly BotContext _botContext;
         private readonly Configuration _configuration;
-        public EditDeleteLogger(BotContext botContext, Configuration configuration, DiscordSocketClient client)
+        private readonly IMemoryCache _banCache;
+        public EditDeleteLogger(BotContext botContext, Configuration configuration, DiscordSocketClient client, IMemoryCache memoryCache)
         {
             _botContext = botContext;
             _configuration = configuration;
+            _banCache = memoryCache;
             client.MessageDeleted += (cacheable, channel) => GenericMessageEvent(cacheable, channel);
             client.MessageUpdated += (cacheable, message, channel) => GenericMessageEvent(cacheable, channel, message);
         }
         private async Task GenericMessageEvent(Cacheable<IMessage, ulong> cachedMessage, ISocketMessageChannel channel, SocketMessage currentMessage = null)
         {
             var message = cachedMessage.Value;
-            //if the message isn't cached, the author isn't a user, or its a bot command then don't do anything
-            if (message == null || message.Source != MessageSource.User || message.Content.StartsWith(_configuration.Prefix))
+            //if the message isn't cached, the author isn't a user, its a bot command, or the user is in the ban cache then don't do anything
+            if (message == null || message.Source != MessageSource.User || message.Content.StartsWith(_configuration.Prefix) || _banCache.Get(message.Author.Id) != null)
                 return;
             //don't bother doing anything if the message is a PM
             if (channel is SocketGuildChannel guildchannel)

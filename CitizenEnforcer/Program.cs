@@ -33,7 +33,7 @@ namespace CitizenEnforcer
             {
                 LogLevel = LogSeverity.Verbose,
                 AlwaysDownloadUsers = true,
-                MessageCacheSize = 1000
+                MessageCacheSize = 200
             });
             _config = BuildConfig();
             FormatUtilities.Prefix = _config.Prefix;
@@ -78,6 +78,7 @@ namespace CitizenEnforcer
                     else
                         options.UseSqlite(InitializeSQLiteConnection());
                 }, ServiceLifetime.Transient)
+                .AddMemoryCache()
                 .BuildServiceProvider();
         }
 

@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using CitizenEnforcer.Common;
 using CitizenEnforcer.Context;
@@ -10,27 +8,25 @@ using Discord.Commands;
 using Discord.Net;
 using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace CitizenEnforcer.Services
 {
     public class ModerationService
     {
         private readonly BotContext _botContext;
-        public List<Tuple<ulong, ulong>> BanCache { get; set; } = new List<Tuple<ulong, ulong>>();
-        public ModerationService(BotContext botContext, DiscordSocketClient client)
+        private readonly IMemoryCache _banCache;
+        public ModerationService(BotContext botContext, DiscordSocketClient client, IMemoryCache memoryCache)
         {
             _botContext = botContext;
             client.UserBanned += HandleUserBanned;
+            _banCache = memoryCache;
         }
 
         private async Task HandleUserBanned(SocketUser bannedUser, SocketGuild guild)
         {
-            var foundBan = BanCache.FirstOrDefault(x => x.Item1 == guild.Id && x.Item2 == bannedUser.Id);
-            if (foundBan != null)
-            {
-                BanCache.Remove(foundBan);
+            if (_banCache.Get(bannedUser.Id) != null)
                 return;
-            }
 
             if (!await _botContext.Guilds.AnyAsync(x => x.GuildId == guild.Id && x.IsModerationEnabled))
                 return;
@@ -104,7 +100,7 @@ namespace CitizenEnforcer.Services
                 TempBanActive = true,
                 ExpireDate = DateTimeOffset.UtcNow.AddDays(3)
             };
-            BanCache.Add(new Tuple<ulong, ulong>(context.Guild.Id, user.Id));
+            _banCache.Set(user.Id, context.Guild.Id, TimeSpan.FromSeconds(10));
             await _botContext.TempBans.AddAsync(tempBan);
 
             var builder = FormatUtilities.GetTempBanBuilder(user, context.User, caseID, reason, logEntry.DateTime, tempBan.ExpireDate);
@@ -137,7 +133,7 @@ namespace CitizenEnforcer.Services
             }
             else
             {
-                BanCache.Add(new Tuple<ulong, ulong>(context.Guild.Id, user.Id));
+                _banCache.Set(user.Id, context.Guild.Id, TimeSpan.FromSeconds(10));
                 await SendMessageToUser(user, $"You have been permanently banned from the guild ``{context.Guild.Name}`` {(string.IsNullOrWhiteSpace(reason) ? string.Empty : $"for: ``{reason}``")}");
                 if (isHardBan)
                     await context.Guild.AddBanAsync(user, 2);
