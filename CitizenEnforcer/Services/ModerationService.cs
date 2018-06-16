@@ -23,12 +23,16 @@ namespace CitizenEnforcer.Services
             _botContext = botContext;
             _banCache = memoryCache;
             client.UserBanned += HandleUserBanned;
+            client.UserUnbanned += HandleUserUnbanned;
         }
 
         private async Task HandleUserBanned(SocketUser bannedUser, SocketGuild guild)
         {
-            if (_banCache.Get(bannedUser.Id) != null)
+            //if the user is already cached then reject the ban event
+            if (_banCache.TryGetValue(bannedUser.Id, out CacheModel value) && value.IsBanReject)
                 return;
+
+            _banCache.Set(bannedUser.Id, new CacheModel(guild.Id), TimeSpan.FromSeconds(5));
 
             if (!await _botContext.Guilds.AnyAsync(x => x.GuildId == guild.Id && x.IsModerationEnabled))
                 return;
@@ -51,6 +55,24 @@ namespace CitizenEnforcer.Services
             logEntry.LoggedMessageId = message.Id;
             await _botContext.SaveChangesAsync();
             await SendMessageToAnnounce(guild, $"***{FormatUtilities.GetFullName(bannedUser)} has been permanently banned from the server***");
+        }
+        private async Task HandleUserUnbanned(SocketUser bannedUser, SocketGuild guild)
+        {
+            //if the user is cached then reject the unban event
+            if (_banCache.TryGetValue(bannedUser.Id, out CacheModel value) && !value.IsBanReject)
+                return;
+            var foundtb = await _botContext.TempBans.Include(x => x.ModLog).FirstOrDefaultAsync(x => x.ModLog.UserId == bannedUser.Id && x.TempBanActive);
+            if (foundtb != null)
+            {
+                foundtb.TempBanActive = false;
+                await _botContext.SaveChangesAsync();
+            }
+
+            var logs = await guild.GetAuditLogsAsync(5).FlattenAsync();
+            var entry = logs.FirstOrDefault(x => (x.Data as UnbanAuditLogData)?.Target.Id == bannedUser.Id);
+            var builder = FormatUtilities.GetUnbanBuilder(bannedUser, "Manual Unban", entry?.User);
+            await SendMessageToModLog(guild, builder);
+            await SendMessageToAnnounce(guild, $"***{FormatUtilities.GetFullName(bannedUser)}'s ban has been lifted***");
         }
 
         public async Task WarnUser(SocketCommandContext context, IGuildUser user, string reason)
@@ -108,7 +130,7 @@ namespace CitizenEnforcer.Services
                 TempBanActive = true,
                 ExpireDate = DateTimeOffset.UtcNow.AddDays(3)
             };
-            _banCache.Set(user.Id, context.Guild.Id, TimeSpan.FromSeconds(10));
+            _banCache.Set(user.Id, new CacheModel(context.Guild.Id), TimeSpan.FromSeconds(5));
             await _botContext.TempBans.AddAsync(tempBan);
 
             var builder = FormatUtilities.GetTempBanBuilder(user, context.User, caseID, reason, logEntry.DateTime, tempBan.ExpireDate);
@@ -141,7 +163,7 @@ namespace CitizenEnforcer.Services
             }
             else
             {
-                _banCache.Set(user.Id, context.Guild.Id, TimeSpan.FromSeconds(10));
+                _banCache.Set(user.Id, new CacheModel(context.Guild.Id), TimeSpan.FromSeconds(5));
                 await SendMessageToUser(user, $"You have been permanently banned from the guild ``{context.Guild.Name}`` {(string.IsNullOrWhiteSpace(reason) ? string.Empty : $"for: ``{reason}``")}");
                 if (isHardBan)
                     await context.Guild.AddBanAsync(user, 2);
@@ -173,6 +195,7 @@ namespace CitizenEnforcer.Services
                 foundtb.TempBanActive = false;
                 await _botContext.SaveChangesAsync();
             }
+            _banCache.Set(bannedUser.Id, new CacheModel(context.Guild.Id, false), TimeSpan.FromSeconds(5));
             await context.Guild.RemoveBanAsync(bannedUser);
             var builder = FormatUtilities.GetUnbanBuilder(bannedUser, "Manual Unban", context.User);
             await SendMessageToModLog(context.Guild, builder);
@@ -211,6 +234,17 @@ namespace CitizenEnforcer.Services
         {
             var logEntries = await _botContext.ModLogs.AsNoTracking().LastOrDefaultAsync(x => x.GuildId == GuildID);
             return logEntries?.ModLogCaseID + 1 ?? 1;
+        }
+
+        public class CacheModel
+        {
+            public CacheModel(ulong guildID, bool banReject = true)
+            {
+                GuildID = guildID;
+                IsBanReject = banReject;
+            }
+            public ulong GuildID { get; set; }
+            public bool IsBanReject { get; set; }
         }
     }
 }
