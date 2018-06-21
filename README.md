@@ -1,13 +1,14 @@
 # CitizenEnforcer
-A Discord.Net moderation & edit/delete log bot running on .NET Core 2.1
+A Discord.Net moderation & edit/delete log bot running on .NET Core 2.1. Created for a partnered Discord server (~14,000 users)
 
 Features: 
 
 - Warn/Kick/TempBan/Ban/Unban commands
 - Logging via detailed embeds (moderator, caseID, userID etc)
-- Automatic logging of Bans & Unbans if done via Discord instead of a bot command
 - Lookup of previous moderation actions against a specified user
+- Automatic handling of Temporary bans
 - Automatic logging of deleted and modified messages in requested channels
+- Fallback logging of Bans & Unbans if done via Discord instead of a bot command
 
 Libraries used:
 
