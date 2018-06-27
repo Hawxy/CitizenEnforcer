@@ -1,4 +1,23 @@
-﻿using System;
+﻿#region License
+/*CitizenEnforcer - Moderation and logging bot
+Copyright(C) 2018 Hawx
+https://github.com/Hawxy/CitizenEnforcer
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.If not, see http://www.gnu.org/licenses/ */
+#endregion
+
+using System;
 using System.Threading.Tasks;
 using CitizenEnforcer.Context;
 using CitizenEnforcer.Models;
@@ -20,7 +39,7 @@ namespace CitizenEnforcer.Preconditions
         {
             Configuration config = services.GetService<Configuration>();
             Guild guild = null;
-            if (_type == InitializedType.Basic || _type == InitializedType.All)
+            if (_type >= InitializedType.Basic)
             {
                 var botContext = services.GetService<BotContext>();
                 guild = await botContext.Guilds.AsNoTracking().FirstOrDefaultAsync(x => x.GuildId == context.Guild.Id);
@@ -31,12 +50,7 @@ namespace CitizenEnforcer.Preconditions
             {
                 if (!guild.IsModerationEnabled)
                     return PreconditionResult.FromError($"Failure: Moderation tools are disabled. Enable them with ``{config.Prefix}setup IsModerationEnabled true``");
-
-                //var channel = await context.Guild.GetChannelAsync(guild.ModerationChannel);
-                //var user = await context.Guild.GetCurrentUserAsync();
-                //var perms = user.GetPermissions(channel);
-                //if (!perms.ViewChannel || !perms.SendMessages || !perms.EmbedLinks)
-                //    return PreconditionResult.FromError($"Failure: Unable to access or write to moderation channel. Change channel permissions or set a new one with ``{config.Prefix}setup ModerationChannel``");
+               
             }
             return PreconditionResult.FromSuccess();
         }
