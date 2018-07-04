@@ -38,13 +38,13 @@ namespace CitizenEnforcer.Modules
 
         [Command("user")]
         [Alias("u")]
-        [Priority(0)]
+        [Priority(1000)]
         [Summary("Finds previous cases of a given user")]
-        public Task LookupUser(IGuildUser user) => _lookupService.LookupUser(Context, user);
+        public Task LookupUser(IUser user) => _lookupService.LookupUser(Context, user);
 
         [Command("user")]
         [Alias("u")]
-        [Priority(1)]
+        [Priority(500)]
         [Summary("Find previous cases of a banned user")]
         public Task LookupUser(IBan bannedUser) => _lookupService.LookupUser(Context, bannedUser.User);
 

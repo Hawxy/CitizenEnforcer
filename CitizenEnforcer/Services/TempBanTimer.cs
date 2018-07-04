@@ -50,7 +50,7 @@ namespace CitizenEnforcer.Services
             {
                 //find and unban
                 SocketGuild guild = _client.GetGuild(ban.ModLog.GuildId);
-                var guildban = await guild.GetBanAsync(ban.ModLog.UserId);
+                var guildban = await guild.GetBanSafelyAsync(ban.ModLog.UserId);
                 //the user was already unbanned so don't bother continuing
                 if (guildban == null)
                 {

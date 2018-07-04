@@ -25,6 +25,7 @@ using CitizenEnforcer.Context;
 using CitizenEnforcer.Models;
 using Discord;
 using Discord.Commands;
+using Discord.Net;
 using Microsoft.EntityFrameworkCore;
 
 namespace CitizenEnforcer.Services
@@ -41,7 +42,8 @@ namespace CitizenEnforcer.Services
         public async Task LookupUser(SocketCommandContext context, IUser user)
         {
             var foundLogs = await _botContext.ModLogs.Include(z=> z.TempBan).Where(x => x.UserId == user.Id && x.GuildId == context.Guild.Id).ToListAsync();
-            bool currentlybanned = await context.Guild.GetBanAsync(user.Id) != null;
+            bool currentlybanned = await context.Guild.GetBanSafelyAsync(user.Id) != null;
+            
             if (foundLogs.Count == 0)
             {
                 await context.Channel.SendMessageAsync($"No previous moderator actions have been found for this user. Currently banned: {currentlybanned}");
@@ -68,7 +70,7 @@ namespace CitizenEnforcer.Services
             IUser banUser = null;
             if (caseUser == null)
             {
-                banUser = (await context.Guild.GetBanAsync(foundCase.UserId))?.User;
+                banUser = (await context.Guild.GetBanSafelyAsync(foundCase.UserId))?.User;
             }
 
             EmbedBuilder embed;

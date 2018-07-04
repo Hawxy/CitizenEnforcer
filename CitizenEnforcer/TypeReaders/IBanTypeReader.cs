@@ -31,7 +31,7 @@ namespace CitizenEnforcer.TypeReaders
         {
             if (ulong.TryParse(input, out ulong result))
             {
-                var ban = context.Guild.GetBanAsync(result);
+                var ban = await context.Guild.GetBanSafelyAsync(result);
                 if (ban != null)
                     return TypeReaderResult.FromSuccess(ban);
             }
