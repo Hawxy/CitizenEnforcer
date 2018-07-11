@@ -1,10 +1,12 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Discord;
 using Discord.Net;
+using Discord.WebSocket;
 
 namespace CitizenEnforcer.Common
 {
-    public static class GuildExtensions
+    public static class Extensions
     {
         //prevents needless try/catches over the codebase
         public static async Task<IBan> GetBanSafelyAsync(this IGuild guild, ulong userID)
@@ -18,6 +20,13 @@ namespace CitizenEnforcer.Common
             {
                 return null;
             }
+        }
+
+        public static string ResolveAtString(this SocketUserMessage message, string input)
+        {
+            if (string.IsNullOrWhiteSpace(input)) return null;
+            int index = message.Content.IndexOf(input, StringComparison.Ordinal);
+            return message.Resolve(index);
         }
     }
 }

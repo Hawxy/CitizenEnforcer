@@ -42,39 +42,39 @@ namespace CitizenEnforcer.Modules
         [Command("warn")]
         [Alias("w")]
         [Summary("Logs a user warning. Supports an optional specified reason")]
-        public Task Warn([NotSelf]IGuildUser user, [Remainder] string reason = null) => _moderationService.WarnUser(Context, user, reason);
+        public Task Warn([NotSelf]IGuildUser user, [Remainder] string reason = null) => _moderationService.WarnUser(Context, user, Context.Message.ResolveAtString(reason));
 
         [Command("kick")]
         [Alias("k")]
         [RequireBotPermission(GuildPermission.KickMembers)]
         [Summary("Removes a user from the server. Supports an optional specified reason")]
-        public Task Kick([NotSelf]IGuildUser user, [Remainder] string reason = null) => _moderationService.KickUser(Context, user, reason);
+        public Task Kick([NotSelf]IGuildUser user, [Remainder] string reason = null) => _moderationService.KickUser(Context, user, Context.Message.ResolveAtString(reason));
 
         [Command("tempban")]
         [Alias("tb")]
         [RequireBotPermission(GuildPermission.BanMembers)]
         [Summary("Temporarily bans a user for 3 days. Supports an optional specified reason")]
-        public Task TempBan([NotSelf]IGuildUser user, [Remainder] string reason = null) => _moderationService.TempBanUser(Context, user, reason);
+        public Task TempBan([NotSelf]IGuildUser user, [Remainder] string reason = null) => _moderationService.TempBanUser(Context, user, Context.Message.ResolveAtString(reason));
 
         [Command("softban")]
         [Alias("sb")]
         [RequireBotPermission(GuildPermission.BanMembers)]
         [Summary("Bans a user without deleting message history. Supports an optional specified reason")]
-        public Task SoftBan([NotSelf]IGuildUser user, [Remainder] string reason = null) => _moderationService.BanUser(Context, user, reason, false, false);
+        public Task SoftBan([NotSelf]IGuildUser user, [Remainder] string reason = null) => _moderationService.BanUser(Context, user, Context.Message.ResolveAtString(reason), false, false);
 
         [Priority(1000)]
         [Command("ban")]
         [Alias("b")]
         [RequireBotPermission(GuildPermission.BanMembers)]
         [Summary("Bans and deletes recent message history. Supports an optional specified reason")]
-        public Task Ban([NotSelf]IGuildUser user, [Remainder] string reason = null) => _moderationService.BanUser(Context, user, reason, false, true);
+        public Task Ban([NotSelf]IGuildUser user, [Remainder] string reason = null) => _moderationService.BanUser(Context, user, Context.Message.ResolveAtString(reason), false, true);
 
         [Priority(500)]
         [Command("ban")]
         [Alias("b")]
         [RequireBotPermission(GuildPermission.BanMembers)]
         [Summary("Increases an existing temp-ban to a permanent ban. Supports an optional specified reason")]
-        public Task Ban(IBan bannedUser, [Remainder] string reason = null) => _moderationService.BanUser(Context, bannedUser.User, reason, true, false);
+        public Task Ban(IBan bannedUser, [Remainder] string reason = null) => _moderationService.BanUser(Context, bannedUser.User, Context.Message.ResolveAtString(reason), true, false);
 
         [Command("unban")]
         [Alias("ub")]
@@ -87,6 +87,7 @@ namespace CitizenEnforcer.Modules
         [Summary("Sets the reason of a given caseID")]
         public async Task Reason(ulong caseID, [Remainder] string reason)
         {
+            reason = Context.Message.ResolveAtString(reason);
             var entry = await _botContext.ModLogs.Include(z=> z.Guild).FirstOrDefaultAsync(x => x.ModLogCaseID == caseID && x.GuildId == Context.Guild.Id);
             //Is an event-driven entry
             if (entry?.ModId == 0)
