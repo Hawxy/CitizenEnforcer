@@ -26,6 +26,7 @@ using CitizenEnforcer.Context;
 using CitizenEnforcer.Models;
 using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace CitizenEnforcer.Services
 {
@@ -35,11 +36,13 @@ namespace CitizenEnforcer.Services
         private readonly BotContext _botContext;
         private readonly DiscordSocketClient _client;
         private readonly ModerationService _moderationService;
-        public TempBanTimer(BotContext botContext, DiscordSocketClient client, ModerationService moderationService)
+        private readonly IMemoryCache _banCache;
+        public TempBanTimer(BotContext botContext, DiscordSocketClient client, ModerationService moderationService, IMemoryCache banCache)
         {
             _botContext = botContext;
             _client = client;
             _moderationService = moderationService;
+            _banCache = banCache;
             _timer = new Timer(_ => CheckBan(), null, TimeSpan.FromSeconds(30), TimeSpan.FromMinutes(20)); 
         }
 
@@ -58,6 +61,7 @@ namespace CitizenEnforcer.Services
                     await _botContext.SaveChangesAsync();
                     continue;
                 }
+                _banCache.Set(ban.ModLog.UserId, new ModerationService.CacheModel(guild.Id), TimeSpan.FromSeconds(5));
                 await guild.RemoveBanAsync(ban.ModLog.UserId);
 
                 ban.TempBanActive = false;
