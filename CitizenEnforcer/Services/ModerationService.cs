@@ -73,7 +73,7 @@ namespace CitizenEnforcer.Services
 
             logEntry.LoggedMessageId = message.Id;
             await _botContext.SaveChangesAsync();
-            await SendMessageToAnnounce(guild, $"***{FormatUtilities.GetFullName(bannedUser)} has been permanently banned from the server***");
+            await SendMessageToAnnounce(guild, $"***{bannedUser} has been permanently banned from the server***");
         }
         private async Task HandleUserUnbanned(SocketUser bannedUser, SocketGuild guild)
         {
@@ -91,7 +91,7 @@ namespace CitizenEnforcer.Services
             var entry = logs.FirstOrDefault(x => (x.Data as UnbanAuditLogData)?.Target.Id == bannedUser.Id);
             var builder = FormatUtilities.GetUnbanBuilder(bannedUser, "Manual Unban", entry?.User);
             await SendMessageToModLog(guild, builder);
-            await SendMessageToAnnounce(guild, $"***{FormatUtilities.GetFullName(bannedUser)}'s ban has been lifted***");
+            await SendMessageToAnnounce(guild, $"***{bannedUser}'s ban has been lifted***");
         }
 
         public async Task WarnUser(SocketCommandContext context, IGuildUser user, string reason)
@@ -109,7 +109,7 @@ namespace CitizenEnforcer.Services
             logEntry.LoggedMessageId = message.Id;
             await _botContext.SaveChangesAsync();
 
-            await SendMessageToAnnounce(context.Guild, $"***{FormatUtilities.GetFullName(user)} has received an official warning***");
+            await SendMessageToAnnounce(context.Guild, $"***{user} has received an official warning***");
             await SendMessageToUser(user, $"You have been warned on the guild ``{context.Guild.Name}`` {(string.IsNullOrWhiteSpace(reason) ? string.Empty : $"for: ``{reason}``" )}");
         }
         public async Task KickUser(SocketCommandContext context, IGuildUser user, string reason)
@@ -132,7 +132,7 @@ namespace CitizenEnforcer.Services
             logEntry.LoggedMessageId = message.Id;
             await _botContext.SaveChangesAsync();
 
-            await SendMessageToAnnounce(context.Guild, $"***{FormatUtilities.GetFullName(user)} has been kicked from the server***");
+            await SendMessageToAnnounce(context.Guild, $"***{user} has been kicked from the server***");
         }
         public async Task TempBanUser(SocketCommandContext context, IUser user, string reason)
         {
@@ -161,7 +161,7 @@ namespace CitizenEnforcer.Services
             logEntry.LoggedMessageId = message.Id;
             await _botContext.SaveChangesAsync();
 
-            await SendMessageToAnnounce(context.Guild, $"***{FormatUtilities.GetFullName(user)} has been temporarily banned from the server***");
+            await SendMessageToAnnounce(context.Guild, $"***{user} has been temporarily banned from the server***");
         }
         public async Task BanUser(SocketCommandContext context, IUser user, string reason, bool isEscalation, bool isHardBan)
         {
@@ -202,7 +202,7 @@ namespace CitizenEnforcer.Services
             logEntry.LoggedMessageId = message.Id;
             await _botContext.SaveChangesAsync();
 
-            await SendMessageToAnnounce(context.Guild, $"***{FormatUtilities.GetFullName(user)} has been permanently banned from the server***");
+            await SendMessageToAnnounce(context.Guild, $"***{user} has been permanently banned from the server***");
         }
 
         public async Task UnbanUser(SocketCommandContext context, IUser bannedUser)
@@ -218,7 +218,7 @@ namespace CitizenEnforcer.Services
             await context.Guild.RemoveBanAsync(bannedUser);
             var builder = FormatUtilities.GetUnbanBuilder(bannedUser, "Manual Unban", context.User);
             await SendMessageToModLog(context.Guild, builder);
-            await SendMessageToAnnounce(context.Guild, $"***{FormatUtilities.GetFullName(bannedUser)}'s ban has been lifted***");
+            await SendMessageToAnnounce(context.Guild, $"***{bannedUser}'s ban has been lifted***");
         }
 
         public async Task<IUserMessage> SendMessageToModLog(SocketGuild guild, EmbedBuilder embed)

@@ -107,7 +107,7 @@ namespace CitizenEnforcer.Modules
                     //update the db entry
                     entry.Reason = reason;
                     entry.ModId = Context.User.Id;
-                    entry.ModName = FormatUtilities.GetFullName(Context.User);
+                    entry.ModName = Context.User.ToString();
                     await _botContext.SaveChangesAsync();
 
                     //lets be nice and cleanup afterwards

@@ -28,8 +28,6 @@ namespace CitizenEnforcer.Common
     public static class FormatUtilities
     {
         public static string Prefix;
-        public static string GetFullName(IUser user) => $"{user.Username}#{user.Discriminator}";
-
         public static EmbedBuilder GetWarnBuilder(IUser user, IUser mod, ulong caseID, string reason, DateTimeOffset postedDate)
         {
             var manbuilder =
@@ -39,7 +37,7 @@ namespace CitizenEnforcer.Common
             manbuilder.AddField(z =>
             {
                 z.Name = "User Name";
-                z.Value = GetFullName(user);
+                z.Value = user.ToString();
                 z.IsInline = true;
             });
             manbuilder.AddField(z =>
@@ -66,7 +64,7 @@ namespace CitizenEnforcer.Common
             manbuilder.AddField(z =>
             {
                 z.Name = "User Name";
-                z.Value = GetFullName(user);
+                z.Value = user.ToString();
                 z.IsInline = true;
             });
             manbuilder.AddField(z =>
@@ -92,7 +90,7 @@ namespace CitizenEnforcer.Common
             manbuilder.AddField(z =>
             {
                 z.Name = "User Name";
-                z.Value = GetFullName(user);
+                z.Value = user.ToString();
                 z.IsInline = true;
             });
             manbuilder.AddField(z =>
@@ -129,7 +127,7 @@ namespace CitizenEnforcer.Common
             manbuilder.AddField(z =>
             {
                 z.Name = "User Name";
-                z.Value = GetFullName(user);
+                z.Value = user.ToString();
                 z.IsInline = true;
             });
             manbuilder.AddField(z =>
@@ -158,7 +156,7 @@ namespace CitizenEnforcer.Common
             manbuilder.AddField(z =>
             {
                 z.Name = "User Name";
-                z.Value = GetFullName(user);
+                z.Value = user.ToString();
                 z.IsInline = true;
             });
             manbuilder.AddField(z =>
@@ -175,7 +173,7 @@ namespace CitizenEnforcer.Common
         {
             var manbuilder =
                 new EmbedBuilder().WithColor(new Color(2, 136, 209))
-                    .WithCurrentTimestamp().WithTitle($"User Lookup - {GetFullName(user)} - {user.Id}").WithDescription("---------------------");
+                    .WithCurrentTimestamp().WithTitle($"User Lookup - {user} - {user.Id}").WithDescription("---------------------");
            
             manbuilder.AddField(z =>
             {

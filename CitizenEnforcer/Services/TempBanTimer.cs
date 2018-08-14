@@ -70,7 +70,7 @@ namespace CitizenEnforcer.Services
                 var builder = FormatUtilities.GetUnbanBuilder(guildban.User, "TempBan Expired");
 
                 await _moderationService.SendMessageToModLog(guild, builder);
-                await _moderationService.SendMessageToAnnounce(guild, $"***{FormatUtilities.GetFullName(guildban.User)}'s temporary ban has expired***");
+                await _moderationService.SendMessageToAnnounce(guild, $"***{guildban.User}'s temporary ban has expired***");
 
             }
             await _botContext.SaveChangesAsync();

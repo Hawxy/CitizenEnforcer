@@ -25,7 +25,6 @@ using CitizenEnforcer.Context;
 using CitizenEnforcer.Models;
 using Discord;
 using Discord.Commands;
-using Discord.Net;
 using Microsoft.EntityFrameworkCore;
 
 namespace CitizenEnforcer.Services

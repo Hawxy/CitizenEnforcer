@@ -19,7 +19,6 @@ along with this program.If not, see http://www.gnu.org/licenses/ */
 
 using System;
 using System.ComponentModel.DataAnnotations;
-using CitizenEnforcer.Common;
 using Discord;
 using Discord.Commands;
 
@@ -38,9 +37,9 @@ namespace CitizenEnforcer.Models
             ModLogCaseID = CaseID;
             GuildId = guildID;
             UserId = user.Id;
-            UserName = FormatUtilities.GetFullName(user);
+            UserName = user.ToString();
             ModId = modUser.Id;
-            ModName = FormatUtilities.GetFullName(modUser);
+            ModName = modUser.ToString();
             DateTime = DateTimeOffset.UtcNow;
             InfractionType = type;
             Reason = reason;
@@ -51,7 +50,7 @@ namespace CitizenEnforcer.Models
             ModLogCaseID = CaseID;
             GuildId = GuildID;
             UserId = user.Id;
-            UserName = FormatUtilities.GetFullName(user);
+            UserName = user.ToString();
             ModId = 0;
             ModName = "Unknown";
             DateTime = DateTimeOffset.UtcNow;

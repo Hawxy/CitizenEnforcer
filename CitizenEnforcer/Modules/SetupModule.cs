@@ -116,7 +116,7 @@ namespace CitizenEnforcer.Modules
             var fields = typeof(Guild).GetProperties();
             foreach (var field in fields)
             {
-                if (changeField.Equals(field.Name, StringComparison.CurrentCultureIgnoreCase) && field.PropertyType == typeof(ulong) && field.Name != "GuildId")
+                if (changeField.Equals(field.Name, StringComparison.OrdinalIgnoreCase) && field.PropertyType == typeof(ulong) && field.Name != "GuildId")
                 {
                     field.SetValue(guild, channel.Id);
                     await ReplyAsync($"{field.Name} set to {channel.Mention}");
@@ -136,7 +136,7 @@ namespace CitizenEnforcer.Modules
             var fields = typeof(Guild).GetProperties();
             foreach (var field in fields)
             {
-                if (changeField.Equals(field.Name, StringComparison.CurrentCultureIgnoreCase) && field.PropertyType == typeof(bool))
+                if (changeField.Equals(field.Name, StringComparison.OrdinalIgnoreCase) && field.PropertyType == typeof(bool))
                 {
                     field.SetValue(guild, modify);
                     await ReplyAsync($"{field.Name} set to {modify}");

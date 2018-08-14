@@ -38,7 +38,7 @@ namespace CitizenEnforcer.TypeReaders
             else
             {
                 var bans = await context.Guild.GetBansAsync();
-                var banuser = bans.FirstOrDefault(x => x.User.Username == input || FormatUtilities.GetFullName(x.User).Equals(input));
+                var banuser = bans.FirstOrDefault(x => x.User.Username == input || x.User.ToString().Equals(input));
                 if(banuser != null)
                     return TypeReaderResult.FromSuccess(banuser);
             }
