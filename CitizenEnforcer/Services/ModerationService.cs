@@ -28,6 +28,7 @@ using Discord.Commands;
 using Discord.Net;
 using Discord.Rest;
 using Discord.WebSocket;
+using EFSecondLevelCache.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 
@@ -53,7 +54,7 @@ namespace CitizenEnforcer.Services
 
             _banCache.Set(bannedUser.Id, new CacheModel(guild.Id), TimeSpan.FromSeconds(5));
 
-            if (!await _botContext.Guilds.AnyAsync(x => x.GuildId == guild.Id && x.IsModerationEnabled))
+            if (!await _botContext.Guilds.Cacheable().AnyAsync(x => x.GuildId == guild.Id && x.IsModerationEnabled))
                 return;
 
             var caseID = await GenerateNewCaseID(guild.Id);
@@ -80,7 +81,7 @@ namespace CitizenEnforcer.Services
             //if the user is cached then reject the unban event
             if (_banCache.TryGetValue(bannedUser.Id, out CacheModel value) && !value.IsBanReject)
                 return;
-            var foundtb = await _botContext.TempBans.Include(x => x.ModLog).FirstOrDefaultAsync(x => x.ModLog.UserId == bannedUser.Id && x.TempBanActive);
+            var foundtb = await _botContext.TempBans.Include(x => x.ModLog).Cacheable().FirstOrDefaultAsync(x => x.ModLog.UserId == bannedUser.Id && x.TempBanActive);
             if (foundtb != null)
             {
                 foundtb.TempBanActive = false;
@@ -168,7 +169,7 @@ namespace CitizenEnforcer.Services
             await context.Message.DeleteAsync();
             if (isEscalation)
             {
-                var foundtb = await _botContext.TempBans.Include(y => y.ModLog).FirstOrDefaultAsync(x => x.TempBanActive && x.ModLog.UserId == user.Id);
+                var foundtb = await _botContext.TempBans.Include(y => y.ModLog).Cacheable().FirstOrDefaultAsync(x => x.TempBanActive && x.ModLog.UserId == user.Id);
                 if (foundtb != null)
                 {
                     foundtb.TempBanActive = false;
@@ -208,7 +209,7 @@ namespace CitizenEnforcer.Services
         public async Task UnbanUser(SocketCommandContext context, IUser bannedUser)
         {
             await context.Message.DeleteAsync();
-            var foundtb = await _botContext.TempBans.Include(x => x.ModLog).FirstOrDefaultAsync(x => x.ModLog.UserId == bannedUser.Id && x.TempBanActive);
+            var foundtb = await _botContext.TempBans.Include(x => x.ModLog).Cacheable().FirstOrDefaultAsync(x => x.ModLog.UserId == bannedUser.Id && x.TempBanActive);
             if (foundtb != null)
             {
                 foundtb.TempBanActive = false;

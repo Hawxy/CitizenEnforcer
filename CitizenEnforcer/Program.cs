@@ -21,6 +21,7 @@ using System;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
+using CacheManager.Core;
 using CitizenEnforcer.Common;
 using CitizenEnforcer.Context;
 using CitizenEnforcer.Services;
@@ -29,12 +30,14 @@ using Discord;
 using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.WebSocket;
+using EFSecondLevelCache.Core;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Serilog.Events;
+using ConfigurationBuilder = Microsoft.Extensions.Configuration.ConfigurationBuilder;
 
 namespace CitizenEnforcer
 {
@@ -78,8 +81,8 @@ namespace CitizenEnforcer
             });
             _client.Log += LogConsole;
             _cmd.Log += LogConsole;
-            
-            return new ServiceCollection()
+
+            var provider = new ServiceCollection()
                 .AddSingleton(_client)
                 .AddSingleton(_cmd)
                 .AddSingleton(_config)
@@ -98,7 +101,19 @@ namespace CitizenEnforcer
                         options.UseSqlite(InitializeSQLiteConnection());
                 }, ServiceLifetime.Transient)
                 .AddMemoryCache()
+                .AddEFSecondLevelCache()
+                .AddSingleton(typeof(ICacheManager<>), typeof(BaseCacheManager<>))
+                .AddSingleton(typeof(ICacheManagerConfiguration),
+                        new CacheManager.Core.ConfigurationBuilder()
+                            .WithJsonSerializer()
+                            .WithMicrosoftMemoryCacheHandle()
+                            .WithExpiration(ExpirationMode.Absolute, TimeSpan.FromMinutes(10))
+                            .DisablePerformanceCounters()
+                            .DisableStatistics()
+                            .Build())
                 .BuildServiceProvider();
+            EFServiceProvider.ApplicationServices = provider;
+            return provider;
         }
 
         //My logging requirements for this project aren't complex so Serilog's global static logger will do fine

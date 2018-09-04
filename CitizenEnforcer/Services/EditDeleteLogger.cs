@@ -23,6 +23,7 @@ using CitizenEnforcer.Context;
 using CitizenEnforcer.Settings;
 using Discord;
 using Discord.WebSocket;
+using EFSecondLevelCache.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 
@@ -51,7 +52,7 @@ namespace CitizenEnforcer.Services
             if (channel is SocketGuildChannel guildchannel)
             {
                 //verify the guild is registered and has logging enabled
-                var guild = await _botContext.Guilds.Include(x=> x.RegisteredChannels).AsNoTracking().FirstOrDefaultAsync(x => x.GuildId == guildchannel.Guild.Id && x.IsEditLoggingEnabled);
+                var guild = await _botContext.Guilds.Include(x=> x.RegisteredChannels).AsNoTracking().Cacheable().FirstOrDefaultAsync(x => x.GuildId == guildchannel.Guild.Id && x.IsEditLoggingEnabled);
 
                 //verify the channel is set to be logged
                 // ReSharper disable once SimplifyLinqExpression

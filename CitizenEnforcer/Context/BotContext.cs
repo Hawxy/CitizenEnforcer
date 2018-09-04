@@ -17,9 +17,14 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.If not, see http://www.gnu.org/licenses/ */
 #endregion
 
+using System.Threading;
+using System.Threading.Tasks;
 using CitizenEnforcer.Models;
+using EFSecondLevelCache.Core;
+using EFSecondLevelCache.Core.Contracts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace CitizenEnforcer.Context
 {
@@ -31,7 +36,35 @@ namespace CitizenEnforcer.Context
         public DbSet<RegisteredChannel> RegisteredChannels { get; set; }
         public DbSet<ModLog> ModLogs { get; set; }
         public DbSet<TempBan> TempBans { get; set; }
+
+        public override int SaveChanges()
+        {
+            ChangeTracker.DetectChanges();
+            var changedEntityNames = this.GetChangedEntityNames();
+
+            ChangeTracker.AutoDetectChangesEnabled = false;
+            var result = base.SaveChanges();
+            ChangeTracker.AutoDetectChangesEnabled = true;
+
+            this.GetService<IEFCacheServiceProvider>().InvalidateCacheDependencies(changedEntityNames);
+
+            return result;
+        }
+        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = new CancellationToken())
+        {
+            ChangeTracker.DetectChanges();
+            var changedEntityNames = this.GetChangedEntityNames();
+
+            ChangeTracker.AutoDetectChangesEnabled = false; 
+            var result = base.SaveChangesAsync(cancellationToken);
+            ChangeTracker.AutoDetectChangesEnabled = true;
+
+            this.GetService<IEFCacheServiceProvider>().InvalidateCacheDependencies(changedEntityNames);
+
+            return result;
+        }
     }
+
     //Used for migrations
     public class BotContextFactory : IDesignTimeDbContextFactory<BotContext>
     {

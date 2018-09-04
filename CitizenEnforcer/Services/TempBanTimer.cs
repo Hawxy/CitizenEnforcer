@@ -32,7 +32,7 @@ namespace CitizenEnforcer.Services
 {
     public class TempBanTimer
     {
-        private Timer _timer;
+        private readonly Timer _timer;
         private readonly BotContext _botContext;
         private readonly DiscordSocketClient _client;
         private readonly ModerationService _moderationService;

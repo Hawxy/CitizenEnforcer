@@ -23,6 +23,7 @@ using CitizenEnforcer.Context;
 using CitizenEnforcer.Models;
 using CitizenEnforcer.Settings;
 using Discord.Commands;
+using EFSecondLevelCache.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -42,7 +43,7 @@ namespace CitizenEnforcer.Preconditions
             if (_type >= InitializedType.Basic)
             {
                 var botContext = services.GetService<BotContext>();
-                guild = await botContext.Guilds.AsNoTracking().FirstOrDefaultAsync(x => x.GuildId == context.Guild.Id);
+                guild = await botContext.Guilds.AsNoTracking().Cacheable().FirstOrDefaultAsync(x => x.GuildId == context.Guild.Id);
                 if (guild == null)
                     return PreconditionResult.FromError($"Failure: This bot has not been setup on this server, use ``{config.Prefix}setup initialize``");
             }
