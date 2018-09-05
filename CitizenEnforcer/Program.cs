@@ -107,7 +107,7 @@ namespace CitizenEnforcer
                         new CacheManager.Core.ConfigurationBuilder()
                             .WithJsonSerializer()
                             .WithMicrosoftMemoryCacheHandle()
-                            .WithExpiration(ExpirationMode.Absolute, TimeSpan.FromMinutes(10))
+                            .WithExpiration(ExpirationMode.Absolute, TimeSpan.FromMinutes(30))
                             .DisablePerformanceCounters()
                             .DisableStatistics()
                             .Build())

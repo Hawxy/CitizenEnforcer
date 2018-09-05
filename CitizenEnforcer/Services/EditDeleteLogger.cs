@@ -45,8 +45,12 @@ namespace CitizenEnforcer.Services
         private async Task GenericMessageEvent(Cacheable<IMessage, ulong> cachedMessage, ISocketMessageChannel channel, SocketMessage currentMessage = null)
         {
             var message = cachedMessage.Value;
-            //if the message isn't cached, the author isn't a user, its a bot command, or the user is in the ban cache then don't do anything
-            if (message == null || message.Source != MessageSource.User || message.Content.StartsWith(_configuration.Prefix) || _banCache.Get(message.Author.Id) != null)
+            //if the message isn't cached, the author isn't a user, its a bot command, or the user/channel is in the ban cache then don't do anything
+            if (message == null 
+                || message.Source != MessageSource.User 
+                || message.Content.StartsWith(_configuration.Prefix) 
+                || _banCache.Get(message.Author.Id) != null 
+                || _banCache.Get(channel.Id) != null)
                 return;
             //don't bother doing anything if the message is a PM
             if (channel is SocketGuildChannel guildchannel)
