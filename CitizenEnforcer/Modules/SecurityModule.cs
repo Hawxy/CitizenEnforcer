@@ -40,6 +40,7 @@ namespace CitizenEnforcer.Modules
         public ModerationService _moderationService { get; set; }
 
         [Command("lockdown")]
+        [Alias("panic")]
         [Summary("Prevents non-role users from speaking server-wide")]
         [RequireUserPermission(GuildPermission.ManageRoles)]
         [RequireBotPermission(GuildPermission.ManageRoles)]
