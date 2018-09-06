@@ -51,17 +51,23 @@ namespace CitizenEnforcer.Modules
             var deleteMessages = new List<IMessage>(count);
             var messages = Context.Channel.GetMessagesAsync();
             //suspend logging within the channel
-            _banCache.Set(Context.Channel.Id, string.Empty, TimeSpan.FromSeconds(5));
+            _banCache.Set(Context.Channel.Id, string.Empty, TimeSpan.FromSeconds(6));
 
             await messages.ForEachAsync(async m =>
             {
                 IEnumerable<IMessage> delete = null;
-                if (deleteType == DeleteType.User)
-                    delete = m.Where(msg => !msg.Author.IsBot);
-                else if (deleteType == DeleteType.Bot)
-                    delete = m.Where(msg => msg.Author.IsBot);
-                else if (deleteType == DeleteType.All)
-                    delete = m;
+                switch (deleteType)
+                {
+                    case DeleteType.User:
+                        delete = m.Where(msg => !msg.Author.IsBot);
+                        break;
+                    case DeleteType.Bot:
+                        delete = m.Where(msg => msg.Author.IsBot && msg.Author.Id != Context.Client.CurrentUser.Id);
+                        break;
+                    case DeleteType.All:
+                        delete = m.Where(msg => msg.Author.Id != Context.Client.CurrentUser.Id);
+                        break;
+                }
 
                 foreach (var msg in delete.OrderByDescending(msg => msg.Timestamp))
                 {
