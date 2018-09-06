@@ -25,7 +25,7 @@ using Discord;
 
 namespace CitizenEnforcer.Common
 {
-    public static class FormatUtilities
+    public static class ModeratorFormats
     {
         public static string Prefix;
         public static EmbedBuilder GetWarnBuilder(IUser user, IUser mod, ulong caseID, string reason, DateTimeOffset postedDate)

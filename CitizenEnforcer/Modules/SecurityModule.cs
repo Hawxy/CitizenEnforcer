@@ -21,6 +21,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using CitizenEnforcer.Common;
+using CitizenEnforcer.Preconditions;
 using CitizenEnforcer.Services;
 using Discord;
 using Discord.Addons.Interactive;
@@ -30,15 +32,50 @@ using Microsoft.Extensions.Caching.Memory;
 namespace CitizenEnforcer.Modules
 {
     [RequireContext(ContextType.Guild)]
-    [RequireUserPermission(GuildPermission.ManageMessages)]
-    public class UtilitiesModule : ModuleBase<SocketCommandContext>
+    [RequireInitialized(InitializedType.All)]
+    public class SecurityModule : ModuleBase<SocketCommandContext>
     {
         public InteractiveService _interactive { get; set; }
         public IMemoryCache _banCache { get; set; }
+        public ModerationService _moderationService { get; set; }
+
+        [Command("lockdown")]
+        [Summary("Prevents non-role users from speaking server-wide")]
+        [RequireUserPermission(GuildPermission.ManageRoles)]
+        [RequireBotPermission(GuildPermission.ManageRoles)]
+        public async Task Lockdown()
+        {
+            var role = Context.Guild.EveryoneRole;
+            if (role.Permissions.SendMessages)
+            {
+                var perms = role.Permissions.Modify(sendMessages: false);
+                await role.ModifyAsync(x => x.Permissions = perms);
+
+                var pubembed = SecurityFormats.GetPublicLockdownBuilder(Context.User);
+                await _moderationService.SendEmbedToAnnounce(Context.Guild, pubembed);
+
+                var logembed = SecurityFormats.GetLockdownBuilder(Context.User);
+                await _moderationService.SendEmbedToModLog(Context.Guild, logembed);
+            }
+            else
+            {
+                var perms = role.Permissions.Modify(sendMessages: true);
+                await role.ModifyAsync(x => x.Permissions = perms);
+
+                var pubembed = SecurityFormats.GetPublicLiftedBuilder(Context.User);
+                await _moderationService.SendEmbedToAnnounce(Context.Guild, pubembed);
+
+                var logembed = SecurityFormats.GetLiftedBuilder(Context.User);
+                await _moderationService.SendEmbedToModLog(Context.Guild, logembed);
+            }
+            
+        }
 
         [Command("purge")]
         [Alias("clean")]
         [Summary("Used to clean up a channel")]
+        [RequireUserPermission(GuildPermission.ManageMessages)]
+        [RequireBotPermission(GuildPermission.ManageMessages)]
         public async Task Purge (int count = 10, DeleteType deleteType = DeleteType.All)
         {
             if (count > 100)

@@ -67,9 +67,9 @@ namespace CitizenEnforcer.Services
                 ban.TempBanActive = false;
                 
                 //log the unban
-                var builder = FormatUtilities.GetUnbanBuilder(guildban.User, "TempBan Expired");
+                var builder = ModeratorFormats.GetUnbanBuilder(guildban.User, "TempBan Expired");
 
-                await _moderationService.SendMessageToModLog(guild, builder);
+                await _moderationService.SendEmbedToModLog(guild, builder);
                 await _moderationService.SendMessageToAnnounce(guild, $"***{guildban.User}'s temporary ban has expired***");
 
             }

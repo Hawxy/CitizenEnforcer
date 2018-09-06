@@ -50,7 +50,7 @@ namespace CitizenEnforcer.Services
             }
             var highestInfraction = foundLogs.Max(x => x.InfractionType);
 
-            var builder = FormatUtilities.GetUserLookupBuilder(user, foundLogs, highestInfraction, currentlybanned);
+            var builder = ModeratorFormats.GetUserLookupBuilder(user, foundLogs, highestInfraction, currentlybanned);
 
             await context.Channel.SendMessageAsync("", embed: builder.Build());
         }
@@ -77,23 +77,23 @@ namespace CitizenEnforcer.Services
                 {
                     case InfractionType.Warning:
                         embed = caseUser != null
-                            ? FormatUtilities.GetWarnBuilder(caseUser, modUser, caseID, foundCase.Reason, foundCase.DateTime)
-                            : FormatUtilities.GetWarnBuilder(banUser, modUser, caseID, foundCase.Reason, foundCase.DateTime);
+                            ? ModeratorFormats.GetWarnBuilder(caseUser, modUser, caseID, foundCase.Reason, foundCase.DateTime)
+                            : ModeratorFormats.GetWarnBuilder(banUser, modUser, caseID, foundCase.Reason, foundCase.DateTime);
                         break;
                     case InfractionType.Kick:
                         embed = caseUser != null
-                            ? FormatUtilities.GetKickBuilder(caseUser, modUser, caseID, foundCase.Reason, foundCase.DateTime)
-                            : FormatUtilities.GetKickBuilder(banUser, modUser, caseID, foundCase.Reason, foundCase.DateTime);
+                            ? ModeratorFormats.GetKickBuilder(caseUser, modUser, caseID, foundCase.Reason, foundCase.DateTime)
+                            : ModeratorFormats.GetKickBuilder(banUser, modUser, caseID, foundCase.Reason, foundCase.DateTime);
                         break;
                     case InfractionType.TempBan:
                         embed = caseUser != null
-                            ? FormatUtilities.GetTempBanBuilder(caseUser, modUser, caseID, foundCase.Reason, foundCase.DateTime, foundCase.TempBan.ExpireDate)
-                            : FormatUtilities.GetTempBanBuilder(banUser, modUser, caseID, foundCase.Reason, foundCase.DateTime, foundCase.TempBan.ExpireDate);
+                            ? ModeratorFormats.GetTempBanBuilder(caseUser, modUser, caseID, foundCase.Reason, foundCase.DateTime, foundCase.TempBan.ExpireDate)
+                            : ModeratorFormats.GetTempBanBuilder(banUser, modUser, caseID, foundCase.Reason, foundCase.DateTime, foundCase.TempBan.ExpireDate);
                         break;
                     case InfractionType.Ban:
                         embed = caseUser != null
-                            ? FormatUtilities.GetBanBuilder(caseUser, modUser, caseID, foundCase.Reason, foundCase.DateTime)
-                            : FormatUtilities.GetBanBuilder(banUser, modUser, caseID, foundCase.Reason, foundCase.DateTime);
+                            ? ModeratorFormats.GetBanBuilder(caseUser, modUser, caseID, foundCase.Reason, foundCase.DateTime)
+                            : ModeratorFormats.GetBanBuilder(banUser, modUser, caseID, foundCase.Reason, foundCase.DateTime);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();

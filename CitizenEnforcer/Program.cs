@@ -58,7 +58,7 @@ namespace CitizenEnforcer
                 MessageCacheSize = 200
             });
             _config = BuildConfig();
-            FormatUtilities.Prefix = _config.Prefix;
+            ModeratorFormats.Prefix = _config.Prefix;
 
             var services = ConfigureServices();
             await services.GetRequiredService<CommandHandler>().InitializeAsync();

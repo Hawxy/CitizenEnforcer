@@ -69,8 +69,8 @@ namespace CitizenEnforcer.Services
             await _botContext.ModLogs.AddAsync(logEntry);
             await _botContext.SaveChangesAsync();
 
-            var builder = FormatUtilities.GetBanBuilder(bannedUser, entry?.User, caseID, entry?.Reason, logEntry.DateTime);
-            var message = await SendMessageToModLog(guild, builder);
+            var builder = ModeratorFormats.GetBanBuilder(bannedUser, entry?.User, caseID, entry?.Reason, logEntry.DateTime);
+            var message = await SendEmbedToModLog(guild, builder);
 
             logEntry.LoggedMessageId = message.Id;
             await _botContext.SaveChangesAsync();
@@ -90,8 +90,8 @@ namespace CitizenEnforcer.Services
 
             var logs = await guild.GetAuditLogsAsync(5).FlattenAsync();
             var entry = logs.FirstOrDefault(x => (x.Data as UnbanAuditLogData)?.Target.Id == bannedUser.Id);
-            var builder = FormatUtilities.GetUnbanBuilder(bannedUser, "Manual Unban", entry?.User);
-            await SendMessageToModLog(guild, builder);
+            var builder = ModeratorFormats.GetUnbanBuilder(bannedUser, "Manual Unban", entry?.User);
+            await SendEmbedToModLog(guild, builder);
             await SendMessageToAnnounce(guild, $"***{bannedUser}'s ban has been lifted***");
         }
 
@@ -104,9 +104,9 @@ namespace CitizenEnforcer.Services
             await _botContext.ModLogs.AddAsync(logEntry);
             await _botContext.SaveChangesAsync();
 
-            var builder = FormatUtilities.GetWarnBuilder(user, context.User, caseID, reason, logEntry.DateTime);
+            var builder = ModeratorFormats.GetWarnBuilder(user, context.User, caseID, reason, logEntry.DateTime);
 
-            var message = await SendMessageToModLog(context.Guild, builder);
+            var message = await SendEmbedToModLog(context.Guild, builder);
             logEntry.LoggedMessageId = message.Id;
             await _botContext.SaveChangesAsync();
 
@@ -122,14 +122,14 @@ namespace CitizenEnforcer.Services
             await _botContext.ModLogs.AddAsync(logEntry);
             await _botContext.SaveChangesAsync();
 
-            var builder = FormatUtilities.GetKickBuilder(user, context.User, caseID, reason, logEntry.DateTime);
+            var builder = ModeratorFormats.GetKickBuilder(user, context.User, caseID, reason, logEntry.DateTime);
 
             await SendMessageToUser(user, $"You have been kicked from the guild ``{context.Guild.Name}`` {(string.IsNullOrWhiteSpace(reason) ? string.Empty : $"for: ``{reason}``" )}");
 
             //Kick
             await user.KickAsync();
 
-            var message = await SendMessageToModLog(context.Guild, builder);
+            var message = await SendEmbedToModLog(context.Guild, builder);
             logEntry.LoggedMessageId = message.Id;
             await _botContext.SaveChangesAsync();
 
@@ -153,12 +153,12 @@ namespace CitizenEnforcer.Services
             _banCache.Set(user.Id, new CacheModel(context.Guild.Id), TimeSpan.FromSeconds(5));
             await _botContext.TempBans.AddAsync(tempBan);
 
-            var builder = FormatUtilities.GetTempBanBuilder(user, context.User, caseID, reason, logEntry.DateTime, tempBan.ExpireDate);
+            var builder = ModeratorFormats.GetTempBanBuilder(user, context.User, caseID, reason, logEntry.DateTime, tempBan.ExpireDate);
             await SendMessageToUser(user, $"You have been temporarily banned from the guild ``{context.Guild.Name}`` {(string.IsNullOrWhiteSpace(reason) ? string.Empty : $"for: ``{reason}``")}\nThis ban will expire on ``{tempBan.ExpireDate.DateTime} UTC``");
             //Ban
             await context.Guild.AddBanAsync(user);
 
-            var message = await SendMessageToModLog(context.Guild, builder);
+            var message = await SendEmbedToModLog(context.Guild, builder);
             logEntry.LoggedMessageId = message.Id;
             await _botContext.SaveChangesAsync();
 
@@ -197,9 +197,9 @@ namespace CitizenEnforcer.Services
             await _botContext.ModLogs.AddAsync(logEntry);
             await _botContext.SaveChangesAsync();
 
-            var builder = FormatUtilities.GetBanBuilder(user, context.User, caseID, reason, logEntry.DateTime);
+            var builder = ModeratorFormats.GetBanBuilder(user, context.User, caseID, reason, logEntry.DateTime);
 
-            var message = await SendMessageToModLog(context.Guild, builder);
+            var message = await SendEmbedToModLog(context.Guild, builder);
             logEntry.LoggedMessageId = message.Id;
             await _botContext.SaveChangesAsync();
 
@@ -217,16 +217,26 @@ namespace CitizenEnforcer.Services
             }
             _banCache.Set(bannedUser.Id, new CacheModel(context.Guild.Id, false), TimeSpan.FromSeconds(5));
             await context.Guild.RemoveBanAsync(bannedUser);
-            var builder = FormatUtilities.GetUnbanBuilder(bannedUser, "Manual Unban", context.User);
-            await SendMessageToModLog(context.Guild, builder);
+            var builder = ModeratorFormats.GetUnbanBuilder(bannedUser, "Manual Unban", context.User);
+            await SendEmbedToModLog(context.Guild, builder);
             await SendMessageToAnnounce(context.Guild, $"***{bannedUser}'s ban has been lifted***");
         }
 
-        public async Task<IUserMessage> SendMessageToModLog(SocketGuild guild, EmbedBuilder embed)
+        public async Task<IUserMessage> SendEmbedToModLog(SocketGuild guild, EmbedBuilder embed)
         {
             var foundGuild = await _botContext.Guilds.AsNoTracking().FirstOrDefaultAsync(x => x.GuildId == guild.Id);
             var channel = guild.GetTextChannel(foundGuild.ModerationChannel);
             return await channel.SendMessageAsync("", embed: embed.Build());
+        }
+
+        public async Task SendEmbedToAnnounce(SocketGuild guild, EmbedBuilder embed)
+        {
+            var foundGuild = await _botContext.Guilds.AsNoTracking().FirstOrDefaultAsync(x => x.GuildId == guild.Id && x.IsPublicAnnounceEnabled);
+            //public announce disabled
+            if (foundGuild == null)
+                return;
+            var channel = guild.GetTextChannel(foundGuild.PublicAnnouceChannel);
+            await channel.SendMessageAsync(embed: embed.Build());
         }
 
         public async Task SendMessageToAnnounce(SocketGuild guild, string message)
