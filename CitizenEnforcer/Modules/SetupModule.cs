@@ -19,6 +19,7 @@ along with this program.If not, see http://www.gnu.org/licenses/ */
 
 using System;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using CitizenEnforcer.Context;
@@ -113,18 +114,16 @@ namespace CitizenEnforcer.Modules
         public async Task ChangeChannel(string changeField, ITextChannel channel)
         {
             var guild = await _botContext.Guilds.FirstOrDefaultAsync(x => x.GuildId == Context.Guild.Id);
-            var fields = typeof(Guild).GetProperties();
-            foreach (var field in fields)
+            var field = typeof(Guild).GetProperty(changeField, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
+            if (field == null)
             {
-                if (changeField.Equals(field.Name, StringComparison.OrdinalIgnoreCase) && field.PropertyType == typeof(ulong) && field.Name != "GuildId")
-                {
-                    field.SetValue(guild, channel.Id);
-                    await ReplyAsync($"{field.Name} set to {channel.Mention}");
-                    await _botContext.SaveChangesAsync();
-                    return;
-                }
+                await ReplyAsync("Unable to find field");
+                return;
             }
-            await ReplyAsync("Unable to find field");
+
+            field.SetValue(guild, channel.Id);
+            await ReplyAsync($"{field.Name} set to {channel.Mention}");
+            await _botContext.SaveChangesAsync();
         }
 
         [Command]
@@ -133,18 +132,17 @@ namespace CitizenEnforcer.Modules
         public async Task ChangeBool(string changeField, bool modify)
         {
             var guild = await _botContext.Guilds.FirstOrDefaultAsync(x => x.GuildId == Context.Guild.Id);
-            var fields = typeof(Guild).GetProperties();
-            foreach (var field in fields)
+            var field = typeof(Guild).GetProperty(changeField, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
+            if (field == null || field.PropertyType != typeof(bool))
             {
-                if (changeField.Equals(field.Name, StringComparison.OrdinalIgnoreCase) && field.PropertyType == typeof(bool))
-                {
-                    field.SetValue(guild, modify);
-                    await ReplyAsync($"{field.Name} set to {modify}");
-                    await _botContext.SaveChangesAsync();
-                    return;
-                }
+                await ReplyAsync("Unable to find field");
+                return;
             }
-            await ReplyAsync("Unable to find field");
+
+            field.SetValue(guild, modify);
+            await ReplyAsync($"{field.Name} set to {modify}");
+            await _botContext.SaveChangesAsync();
+           
         }
 
         [Group("registeredchannels")]
@@ -157,16 +155,15 @@ namespace CitizenEnforcer.Modules
             [Summary("Lists all currently registered channels")]
             public async Task RegisteredChannelsList()
             {
-                var currentchannels = await _botContext.RegisteredChannels.Include(x => x.Guild).Where(x => x.GuildId == Context.Guild.Id).ToListAsync();
+                var currentchannels = await _botContext.RegisteredChannels.AsNoTracking().Include(x => x.Guild).Where(x => x.GuildId == Context.Guild.Id).ToListAsync();
                 StringBuilder builder = new StringBuilder("Currently tracked channels:\n");
 
                 foreach (var registeredChannel in currentchannels)
                 {
                     var channel = Context.Guild.GetChannel(registeredChannel.ChannelId);
-                    builder.Append($"{(channel as ITextChannel)?.Mention}, ");
+                    builder.AppendJoin(", ", (channel as ITextChannel)?.Mention);
                 }
 
-                builder.Length -= 2;
                 await ReplyAsync(builder.ToString());
             }
 
