@@ -131,7 +131,7 @@ namespace CitizenEnforcer.Modules
             var muteRole = Context.Guild.Roles.SingleOrDefault(x => x.Name == "Muted" && !x.Permissions.SendMessages);
             if (muteRole == null)
             {
-                await _interactive.ReplyAndDeleteAsync(Context, "Unable to mute/unmute user: Muted role does not exist");
+                await _interactive.ReplyAndDeleteAsync(Context, "Unable to mute/unmute user: Muted role does not exist within guild");
                 return;
             }
 
