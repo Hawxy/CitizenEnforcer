@@ -40,7 +40,7 @@ namespace CitizenEnforcer.Services
 
         public async Task LookupUser(SocketCommandContext context, IUser user)
         {
-            var foundLogs = await _botContext.ModLogs.Include(z=> z.TempBan).Where(x => x.UserId == user.Id && x.GuildId == context.Guild.Id).ToListAsync();
+            var foundLogs = await _botContext.ModLogs.AsNoTracking().Include(z=> z.TempBan).Where(x => x.UserId == user.Id && x.GuildId == context.Guild.Id).ToListAsync();
             bool currentlybanned = await context.Guild.GetBanSafelyAsync(user.Id) != null;
             
             if (foundLogs.Count == 0)
@@ -57,7 +57,7 @@ namespace CitizenEnforcer.Services
 
         public async Task LookupCase(SocketCommandContext context, ulong caseID)
         {
-            var foundCase = await _botContext.ModLogs.FirstOrDefaultAsync(x => x.ModLogCaseID == caseID && x.GuildId == context.Guild.Id);
+            var foundCase = await _botContext.ModLogs.AsNoTracking().FirstOrDefaultAsync(x => x.ModLogCaseID == caseID && x.GuildId == context.Guild.Id);
             if (foundCase == null)
             {
                 await context.Channel.SendMessageAsync("Case not found");

@@ -27,6 +27,7 @@ using CitizenEnforcer.Services;
 using Discord;
 using Discord.Addons.Interactive;
 using Discord.Commands;
+using Discord.WebSocket;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace CitizenEnforcer.Modules
@@ -68,6 +69,45 @@ namespace CitizenEnforcer.Modules
 
                 var logembed = SecurityFormats.GetLiftedBuilder(Context.User);
                 await _moderationService.SendEmbedToModLog(Context.Guild, logembed);
+            }
+            
+        }
+        [Command("freeze")]
+        [Alias("lock")]
+        [RequireBotPermission(GuildPermission.ManageChannels)]
+        [RequireUserPermission(GuildPermission.ManageChannels)]
+        public async Task Freeze()
+        {
+            var role = Context.Guild.EveryoneRole;
+            if (!role.Permissions.SendMessages)
+            {
+                await _interactive.ReplyAndDeleteAsync(Context, "Unable to freeze channel: Server already globally locked", timeout: TimeSpan.FromSeconds(15));
+            }
+
+            var channel = Context.Channel as SocketGuildChannel;
+
+            var channelRole = channel.GetPermissionOverwrite(role);
+            if (!channelRole.HasValue || channelRole.Value.SendMessages == PermValue.Allow)
+            {
+                //Freeze channel
+                await channel.AddPermissionOverwriteAsync(role, new OverwritePermissions(sendMessages: PermValue.Deny));
+
+                var pubembed = SecurityFormats.GetPublicFreezeBuilder(Context.User);
+                await ReplyAsync(embed: pubembed.Build());
+
+                var logembed = SecurityFormats.GetFreezeBuilder(Context.User);
+                await _moderationService.SendEmbedToModLog(Context.Guild, logembed);
+
+            }
+            else if (channelRole.Value.SendMessages == PermValue.Deny)
+            {
+                //Unfreeze channel
+                await channel.AddPermissionOverwriteAsync(role, new OverwritePermissions(sendMessages: PermValue.Allow));
+
+                var embed = SecurityFormats.GetUnfrozenBuilder(Context.User);
+                await ReplyAsync(embed: embed.Build());
+                await _moderationService.SendEmbedToModLog(Context.Guild, embed);
+
             }
             
         }
