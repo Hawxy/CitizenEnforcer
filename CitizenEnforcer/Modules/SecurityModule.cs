@@ -53,27 +53,28 @@ namespace CitizenEnforcer.Modules
                 var perms = role.Permissions.Modify(sendMessages: false);
                 await role.ModifyAsync(x => x.Permissions = perms);
 
-                var pubembed = SecurityFormats.GetPublicLockdownBuilder(Context.User);
-                await _moderationService.SendEmbedToAnnounce(Context.Guild, pubembed);
+                var pubEmbed = SecurityFormats.GetPublicLockdownBuilder(Context.User);
+                await _moderationService.SendEmbedToAnnounce(Context.Guild, pubEmbed);
 
-                var logembed = SecurityFormats.GetLockdownBuilder(Context.User);
-                await _moderationService.SendEmbedToModLog(Context.Guild, logembed);
+                var logEmbed = SecurityFormats.GetLockdownBuilder(Context.User);
+                await _moderationService.SendEmbedToModLog(Context.Guild, logEmbed);
             }
             else
             {
                 var perms = role.Permissions.Modify(sendMessages: true);
                 await role.ModifyAsync(x => x.Permissions = perms);
 
-                var pubembed = SecurityFormats.GetPublicLiftedBuilder(Context.User);
-                await _moderationService.SendEmbedToAnnounce(Context.Guild, pubembed);
+                var pubEmbed = SecurityFormats.GetPublicLiftedBuilder(Context.User);
+                await _moderationService.SendEmbedToAnnounce(Context.Guild, pubEmbed);
 
-                var logembed = SecurityFormats.GetLiftedBuilder(Context.User);
-                await _moderationService.SendEmbedToModLog(Context.Guild, logembed);
+                var logEmbed = SecurityFormats.GetLiftedBuilder(Context.User);
+                await _moderationService.SendEmbedToModLog(Context.Guild, logEmbed);
             }
             
         }
         [Command("freeze")]
         [Alias("lock")]
+        [Summary("Prevents non-role users from speaking in a channel")]
         [RequireBotPermission(GuildPermission.ManageChannels)]
         [RequireUserPermission(GuildPermission.ManageChannels)]
         public async Task Freeze()
@@ -81,7 +82,7 @@ namespace CitizenEnforcer.Modules
             var role = Context.Guild.EveryoneRole;
             if (!role.Permissions.SendMessages)
             {
-                await _interactive.ReplyAndDeleteAsync(Context, "Unable to freeze channel: Server already globally locked", timeout: TimeSpan.FromSeconds(15));
+                await _interactive.ReplyAndDeleteAsync(Context, "Unable to freeze channel: Server currently locked down", timeout: TimeSpan.FromSeconds(15));
             }
 
             var channel = Context.Channel as SocketGuildChannel;
@@ -92,11 +93,11 @@ namespace CitizenEnforcer.Modules
                 //Freeze channel
                 await channel.AddPermissionOverwriteAsync(role, new OverwritePermissions(sendMessages: PermValue.Deny));
 
-                var pubembed = SecurityFormats.GetPublicFreezeBuilder(Context.User);
-                await ReplyAsync(embed: pubembed.Build());
+                var pubEmbed = SecurityFormats.GetPublicFreezeBuilder(Context.User);
+                await ReplyAsync(embed: pubEmbed.Build());
 
-                var logembed = SecurityFormats.GetFreezeBuilder(Context.User);
-                await _moderationService.SendEmbedToModLog(Context.Guild, logembed);
+                var logEmbed = SecurityFormats.GetFreezeBuilder(Context.User);
+                await _moderationService.SendEmbedToModLog(Context.Guild, logEmbed);
 
             }
             else if (channelRole.Value.SendMessages == PermValue.Deny)
@@ -109,7 +110,34 @@ namespace CitizenEnforcer.Modules
                 await _moderationService.SendEmbedToModLog(Context.Guild, embed);
 
             }
-            
+        }
+
+        [Command("mute")]
+        [Summary("Mutes a user")]
+        [RequireUserPermission(GuildPermission.ManageRoles)]
+        [RequireBotPermission(GuildPermission.ManageRoles)]
+        public async Task MuteUser(SocketGuildUser user)
+        {
+            var muteRole = Context.Guild.Roles.SingleOrDefault(x => x.Name == "Muted" && !x.Permissions.SendMessages);
+            if (muteRole == null)
+            {
+                await _interactive.ReplyAndDeleteAsync(Context, "Unable to mute/unmute user: Muted role does not exist");
+                return;
+            }
+
+            //TODO notifications
+            if (user.Roles.Any(x => x.Name == "Muted"))
+            {
+                await user.RemoveRoleAsync(muteRole);
+            }
+            else
+            {
+                await user.AddRoleAsync(muteRole);
+            }
+           
+
+
+
         }
 
         [Command("purge")]
