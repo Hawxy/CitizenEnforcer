@@ -1,5 +1,6 @@
 ﻿using System;
 using Discord;
+using Discord.WebSocket;
 
 namespace CitizenEnforcer.Common
 {
@@ -39,7 +40,9 @@ namespace CitizenEnforcer.Common
         public static EmbedBuilder GetPublicFreezeBuilder(IUser mod) 
             => GetFreezeBuilder(mod).WithDescription("This channel has been locked to non-role users");
 
-        public static EmbedBuilder GetFreezeBuilder(IUser mod)
+        public static EmbedBuilder GetLoggedFreezeBuilder(IUser mod, SocketTextChannel channel)
+            => GetFreezeBuilder(mod).WithDescription($"Channel locked: {channel.Mention}");
+        private static EmbedBuilder GetFreezeBuilder(IUser mod)
         {
             var embedBuilder =
                 new EmbedBuilder()

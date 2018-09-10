@@ -34,6 +34,7 @@ namespace CitizenEnforcer.Modules
 {
     [RequireContext(ContextType.Guild)]
     [RequireInitialized(InitializedType.All)]
+    [RequireBotPermission(GuildPermission.ManageRoles | GuildPermission.ManageChannels | GuildPermission.SendMessages)]
     public class SecurityModule : ModuleBase<SocketCommandContext>
     {
         public InteractiveService _interactive { get; set; }
@@ -44,7 +45,6 @@ namespace CitizenEnforcer.Modules
         [Alias("panic")]
         [Summary("Prevents non-role users from speaking server-wide")]
         [RequireUserPermission(GuildPermission.ManageRoles)]
-        [RequireBotPermission(GuildPermission.ManageRoles)]
         public async Task Lockdown()
         {
             var role = Context.Guild.EveryoneRole;
@@ -75,9 +75,8 @@ namespace CitizenEnforcer.Modules
         [Command("freeze")]
         [Alias("lock")]
         [Summary("Prevents non-role users from speaking in a channel")]
-        [RequireBotPermission(GuildPermission.ManageChannels)]
         [RequireUserPermission(GuildPermission.ManageChannels)]
-        public async Task Freeze()
+        public async Task Freeze(SocketTextChannel mentionedChannel = null)
         {
             var role = Context.Guild.EveryoneRole;
             if (!role.Permissions.SendMessages)
@@ -85,18 +84,19 @@ namespace CitizenEnforcer.Modules
                 await _interactive.ReplyAndDeleteAsync(Context, "Unable to freeze channel: Server currently locked down", timeout: TimeSpan.FromSeconds(15));
             }
 
-            var channel = Context.Channel as SocketGuildChannel;
+            var channel = mentionedChannel ?? Context.Channel as SocketTextChannel;
 
             var channelRole = channel.GetPermissionOverwrite(role);
             if (!channelRole.HasValue || channelRole.Value.SendMessages == PermValue.Allow)
             {
+                await CheckSelfPermissionsAsync(channel);
                 //Freeze channel
                 await channel.AddPermissionOverwriteAsync(role, new OverwritePermissions(sendMessages: PermValue.Deny));
 
                 var pubEmbed = SecurityFormats.GetPublicFreezeBuilder(Context.User);
-                await ReplyAsync(embed: pubEmbed.Build());
+                await channel.SendMessageAsync(embed: pubEmbed.Build());
 
-                var logEmbed = SecurityFormats.GetFreezeBuilder(Context.User);
+                var logEmbed = SecurityFormats.GetLoggedFreezeBuilder(Context.User, channel);
                 await _moderationService.SendEmbedToModLog(Context.Guild, logEmbed);
 
             }
@@ -106,16 +106,26 @@ namespace CitizenEnforcer.Modules
                 await channel.AddPermissionOverwriteAsync(role, new OverwritePermissions(sendMessages: PermValue.Allow));
 
                 var embed = SecurityFormats.GetUnfrozenBuilder(Context.User);
-                await ReplyAsync(embed: embed.Build());
+                await channel.SendMessageAsync(embed: embed.Build());
                 await _moderationService.SendEmbedToModLog(Context.Guild, embed);
 
+            }
+        }
+
+        //Make sure we don't block ourselves from sending messages
+        private async Task CheckSelfPermissionsAsync(SocketTextChannel channel)
+        {
+            var guildChannel = channel as SocketGuildChannel;
+            var perms = guildChannel.GetPermissionOverwrite(Context.Client.CurrentUser);
+            if (!perms.HasValue || perms.Value.SendMessages != PermValue.Allow)
+            {
+                await guildChannel.AddPermissionOverwriteAsync(Context.Client.CurrentUser, new OverwritePermissions(sendMessages: PermValue.Allow));
             }
         }
 
         [Command("mute")]
         [Summary("Mutes a user")]
         [RequireUserPermission(GuildPermission.ManageRoles)]
-        [RequireBotPermission(GuildPermission.ManageRoles)]
         public async Task MuteUser(SocketGuildUser user)
         {
             var muteRole = Context.Guild.Roles.SingleOrDefault(x => x.Name == "Muted" && !x.Permissions.SendMessages);
@@ -135,16 +145,12 @@ namespace CitizenEnforcer.Modules
                 await user.AddRoleAsync(muteRole);
             }
            
-
-
-
         }
 
         [Command("purge")]
         [Alias("clean")]
         [Summary("Used to clean up a channel")]
         [RequireUserPermission(GuildPermission.ManageMessages)]
-        [RequireBotPermission(GuildPermission.ManageMessages)]
         public async Task Purge (int count = 10, DeleteType deleteType = DeleteType.All)
         {
             if (count > 100)
