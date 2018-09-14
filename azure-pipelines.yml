@@ -9,11 +9,14 @@ steps:
 - task: DotNetCoreCLI@2
   inputs:
     command: publish
-    arguments: --configuration $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)
+    arguments: --configuration $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)/artifacts
     publishWebProjects: false
     projects: '**/*.csproj'
     feedsToUse: config
-    nugetConfigPath: NuGet.config 
-    zipAfterPublish: true    
+    nugetConfigPath: NuGet.config  
 
 - task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)/artifacts'
+    ArtifactName: citizenEnforcer-artifacts
+    publishLocation: Container
