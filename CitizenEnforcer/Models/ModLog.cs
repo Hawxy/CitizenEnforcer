@@ -26,7 +26,6 @@ namespace CitizenEnforcer.Models
 {
     public class ModLog
     {
-        //this db setup isn't perfect, but it'll do for now
         public ModLog(){}
         //For command-caused logs
         public ModLog(SocketCommandContext context, IUser user, ulong CaseID, InfractionType type, string reason) :
