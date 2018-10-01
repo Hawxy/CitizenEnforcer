@@ -124,25 +124,28 @@ namespace CitizenEnforcer.Modules
         }
 
         [Command("mute")]
-        [Summary("Mutes a user")]
+        [Summary("Mutes a user guild-wide")]
         [RequireUserPermission(GuildPermission.ManageRoles)]
         public async Task MuteUser(SocketGuildUser user)
         {
-            var muteRole = Context.Guild.Roles.SingleOrDefault(x => x.Name == "Muted" && !x.Permissions.SendMessages);
+            var muteRole = Context.Guild.Roles.SingleOrDefault(x => x.Name.Equals("Muted", StringComparison.OrdinalIgnoreCase) && !x.Permissions.SendMessages);
             if (muteRole == null)
             {
-                await _interactive.ReplyAndDeleteAsync(Context, "Unable to mute/unmute user: Muted role does not exist within guild");
+                await _interactive.ReplyAndDeleteAsync(Context, "Unable to mute/unmute user: Muted role does not exist within guild or does not deny the ability to speak");
                 return;
             }
 
-            //TODO notifications
-            if (user.Roles.Any(x => x.Name == "Muted"))
+            if (user.Roles.Any(x => x.Name.Equals("Muted", StringComparison.OrdinalIgnoreCase)))
             {
                 await user.RemoveRoleAsync(muteRole);
+                await _moderationService.SendMessageToAnnounce(Context.Guild, $"***User {user} has been globally muted***");
+                await _moderationService.SendEmbedToModLog(Context.Guild, SecurityFormats.GetUserMuteLoggedBuilder(user, Context.User));
             }
             else
             {
                 await user.AddRoleAsync(muteRole);
+                await _moderationService.SendMessageToAnnounce(Context.Guild, $"***User {user} has been unmuted***");
+                await _moderationService.SendEmbedToModLog(Context.Guild, SecurityFormats.GetUserUnMuteLoggedBuilder(user, Context.User));
             }
            
         }
