@@ -65,6 +65,31 @@ namespace CitizenEnforcer.Common
             return embedBuilder;
         }
 
+        public static EmbedBuilder GetUserMuteLoggedBuilder(IUser user, IUser mod)
+        {
+            var embedBuilder =
+                new EmbedBuilder()
+                    .WithColor(new Color(2, 136, 209))
+                    .WithAuthor(mod)
+                    .WithCurrentTimestamp()
+                    .WithTitle($"Globally Muted User")
+                    .WithDescription($"{user} - {user.Id}");
+
+            return embedBuilder;
+        }
+        public static EmbedBuilder GetUserUnMuteLoggedBuilder(IUser user, IUser mod)
+        {
+            var embedBuilder =
+                new EmbedBuilder()
+                    .WithColor(new Color(2, 136, 209))
+                    .WithAuthor(mod)
+                    .WithCurrentTimestamp()
+                    .WithTitle($"Unmuted User")
+                    .WithDescription($"{user} - {user.Id}");
+
+            return embedBuilder;
+        }
+
 
     }
 }
