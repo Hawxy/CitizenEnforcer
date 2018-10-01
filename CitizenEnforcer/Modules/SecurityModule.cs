@@ -54,7 +54,7 @@ namespace CitizenEnforcer.Modules
                 await role.ModifyAsync(x => x.Permissions = perms);
 
                 var pubEmbed = SecurityFormats.GetPublicLockdownBuilder(Context.User);
-                await _moderationService.SendEmbedToAnnounce(Context.Guild, pubEmbed);
+                await _moderationService.SendMessageToAnnounce(Context.Guild, embed: pubEmbed);
 
                 var logEmbed = SecurityFormats.GetLockdownBuilder(Context.User);
                 await _moderationService.SendEmbedToModLog(Context.Guild, logEmbed);
@@ -65,7 +65,7 @@ namespace CitizenEnforcer.Modules
                 await role.ModifyAsync(x => x.Permissions = perms);
 
                 var pubEmbed = SecurityFormats.GetPublicLiftedBuilder(Context.User);
-                await _moderationService.SendEmbedToAnnounce(Context.Guild, pubEmbed);
+                await _moderationService.SendMessageToAnnounce(Context.Guild, embed: pubEmbed);
 
                 var logEmbed = SecurityFormats.GetLiftedBuilder(Context.User);
                 await _moderationService.SendEmbedToModLog(Context.Guild, logEmbed);

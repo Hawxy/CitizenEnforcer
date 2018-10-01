@@ -229,24 +229,17 @@ namespace CitizenEnforcer.Services
             return await channel.SendMessageAsync("", embed: embed.Build());
         }
 
-        public async Task SendEmbedToAnnounce(SocketGuild guild, EmbedBuilder embed)
+        public async Task SendMessageToAnnounce(SocketGuild guild, string message = "", EmbedBuilder embed = null)
         {
             var foundGuild = await _botContext.Guilds.AsNoTracking().FirstOrDefaultAsync(x => x.GuildId == guild.Id && x.IsPublicAnnounceEnabled);
             //public announce disabled
             if (foundGuild == null)
                 return;
             var channel = guild.GetTextChannel(foundGuild.PublicAnnouceChannel);
-            await channel.SendMessageAsync(embed: embed.Build());
-        }
-
-        public async Task SendMessageToAnnounce(SocketGuild guild, string message)
-        {
-            var foundGuild = await _botContext.Guilds.AsNoTracking().FirstOrDefaultAsync(x => x.GuildId == guild.Id && x.IsPublicAnnounceEnabled);
-            //public announce disabled
-            if (foundGuild == null)
-                return;
-            var channel = guild.GetTextChannel(foundGuild.PublicAnnouceChannel);
-            await channel.SendMessageAsync(message);
+            if (embed == null)
+                await channel.SendMessageAsync(message);
+            else
+                await channel.SendMessageAsync(message, embed: embed.Build());
         }
 
         public async Task SendMessageToUser(IUser user, string message)
