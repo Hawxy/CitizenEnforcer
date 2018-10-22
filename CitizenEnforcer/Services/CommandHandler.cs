@@ -52,13 +52,12 @@ namespace CitizenEnforcer.Services
             await _commandService.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
         }
 
-        private async Task HandleMessage(SocketMessage incmsg)
+        private async Task HandleMessage(SocketMessage incomingMessage)
         {
-            if (!(incmsg is SocketUserMessage message)) return;
+            if (!(incomingMessage is SocketUserMessage message)) return;
             if (message.Source != MessageSource.User) return;
 
             int argPos = 0;
-            //TODO prefix
             if (!message.HasStringPrefix(_config.Prefix, ref argPos) && !message.HasMentionPrefix(_client.CurrentUser, ref argPos)) return;
 
             var context = new SocketCommandContext(_client, message);
