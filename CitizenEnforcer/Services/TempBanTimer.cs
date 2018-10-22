@@ -61,7 +61,7 @@ namespace CitizenEnforcer.Services
                     await _botContext.SaveChangesAsync();
                     continue;
                 }
-                _banCache.Set(ban.ModLog.UserId, new ModerationService.CacheModel(guild.Id), TimeSpan.FromSeconds(5));
+                _banCache.Set(ban.ModLog.UserId, new ModerationService.CacheModel(guild.Id, ModerationService.CacheType.UnbanReject), TimeSpan.FromSeconds(5));
                 await guild.RemoveBanAsync(ban.ModLog.UserId);
 
                 ban.TempBanActive = false;

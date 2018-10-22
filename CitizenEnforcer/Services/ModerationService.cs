@@ -49,7 +49,7 @@ namespace CitizenEnforcer.Services
         private async Task HandleUserBanned(SocketUser bannedUser, SocketGuild guild)
         {
             //if the user is already cached then reject the ban event
-            if (_banCache.TryGetValue(bannedUser.Id, out CacheModel value) && value.IsBanReject)
+            if (_banCache.TryGetValue(bannedUser.Id, out CacheModel value) && value.CacheType == CacheType.BanReject)
                 return;
 
             _banCache.Set(bannedUser.Id, new CacheModel(guild.Id), TimeSpan.FromSeconds(5));
@@ -79,7 +79,7 @@ namespace CitizenEnforcer.Services
         private async Task HandleUserUnbanned(SocketUser bannedUser, SocketGuild guild)
         {
             //if the user is cached then reject the unban event
-            if (_banCache.TryGetValue(bannedUser.Id, out CacheModel value) && !value.IsBanReject)
+            if (_banCache.TryGetValue(bannedUser.Id, out CacheModel value) && value.CacheType == CacheType.UnbanReject)
                 return;
             var foundtb = await _botContext.TempBans.Include(x => x.ModLog).Cacheable().FirstOrDefaultAsync(x => x.ModLog.UserId == bannedUser.Id && x.TempBanActive);
             if (foundtb != null)
@@ -215,7 +215,7 @@ namespace CitizenEnforcer.Services
                 foundtb.TempBanActive = false;
                 await _botContext.SaveChangesAsync();
             }
-            _banCache.Set(bannedUser.Id, new CacheModel(context.Guild.Id, false), TimeSpan.FromSeconds(5));
+            _banCache.Set(bannedUser.Id, new CacheModel(context.Guild.Id, CacheType.UnbanReject), TimeSpan.FromSeconds(5));
             await context.Guild.RemoveBanAsync(bannedUser);
             var builder = ModeratorFormats.GetUnbanBuilder(bannedUser, "Manual Unban", context.User);
             await SendEmbedToModLog(context.Guild, builder);
@@ -261,13 +261,18 @@ namespace CitizenEnforcer.Services
 
         public class CacheModel
         {
-            public CacheModel(ulong guildID, bool banReject = true)
+            public CacheModel(ulong guildID, CacheType cacheType = CacheType.BanReject)
             {
                 GuildID = guildID;
-                IsBanReject = banReject;
+                CacheType = cacheType;
             }
             public ulong GuildID { get; set; }
-            public bool IsBanReject { get; set; }
+            public CacheType CacheType { get; set; }
+        }
+        public enum CacheType
+        {
+            BanReject,
+            UnbanReject
         }
     }
 }
