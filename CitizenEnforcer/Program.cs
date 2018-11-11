@@ -48,7 +48,7 @@ namespace CitizenEnforcer
         {
             Log.Logger = new LoggerConfiguration()
                 .WriteTo.Console()
-                .MinimumLevel.Information()
+                .MinimumLevel.Verbose()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Error)
                 .CreateLogger();
 
