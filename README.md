@@ -16,6 +16,7 @@ Features:
 Libraries used:
 
 - [Discord.Net](https://github.com/RogueException/Discord.Net)
+- [Discord.Addons.Hosting](https://github.com/Hawxy/Discord.Addons.Hosting)
 - [Entity Framework Core](https://docs.microsoft.com/en-us/ef/core/)
 - [SeriLog](https://serilog.net/)
 - [Discord.Addons.Interactive](https://github.com/foxbot/Discord.Addons.Interactive)

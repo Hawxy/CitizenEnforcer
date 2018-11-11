@@ -25,8 +25,9 @@ using CacheManager.Core;
 using CitizenEnforcer.Common;
 using CitizenEnforcer.Context;
 using CitizenEnforcer.Services;
-using CitizenEnforcer.Settings;
 using Discord;
+using Discord.Addons.Hosting;
+using Discord.Addons.Hosting.Reliability;
 using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.WebSocket;
@@ -35,110 +36,93 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Serilog;
 using Serilog.Events;
-using ConfigurationBuilder = Microsoft.Extensions.Configuration.ConfigurationBuilder;
 
 namespace CitizenEnforcer
 {
     public class Program
     {
-        public static async Task Main() => await new Program().Start();
-
-        private DiscordSocketClient _client;
-        private CommandService _cmd;
-        private Configuration _config;
-        public async Task Start()
+        public static async Task Main()
         {
-            Directory.SetCurrentDirectory(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location));
-            _client = new DiscordSocketClient(new DiscordSocketConfig
-            {
-                LogLevel = LogSeverity.Verbose,
-                AlwaysDownloadUsers = true,
-                MessageCacheSize = 200
-            });
-            _config = BuildConfig();
-            ModeratorFormats.Prefix = _config.Prefix;
+            Log.Logger = new LoggerConfiguration()
+                .WriteTo.Console()
+                .MinimumLevel.Information()
+                .MinimumLevel.Override("Microsoft", LogEventLevel.Error)
+                .CreateLogger();
 
-            var services = ConfigureServices();
-            await services.GetRequiredService<CommandHandler>().InitializeAsync();
-            services.GetRequiredService<EditDeleteLogger>();
-            services.GetRequiredService<TempBanTimer>();
+            string dbPassword = GetPassword(); 
 
-            await _client.LoginAsync(TokenType.Bot, _config.Token);
-            await _client.StartAsync();
-
-            await Task.Delay(-1);
-        }
-
-        private IServiceProvider ConfigureServices()
-        {
-            Log.Logger = new LoggerConfiguration().WriteTo.Console().MinimumLevel.Verbose().CreateLogger();
-            _cmd = new CommandService(new CommandServiceConfig
-            {
-                LogLevel = LogSeverity.Verbose,
-                DefaultRunMode = RunMode.Async
-            });
-            _client.Log += LogConsole;
-            _cmd.Log += LogConsole;
-
-            var provider = new ServiceCollection()
-                .AddSingleton(_client)
-                .AddSingleton(_cmd)
-                .AddSingleton(_config)
-                .AddSingleton<CommandHandler>()
-                .AddSingleton<EditDeleteLogger>()
-                .AddSingleton<InteractiveService>()
-                .AddSingleton<LookupService>()
-                .AddSingleton<ModerationService>()
-                .AddSingleton<TempBanTimer>()
-                .AddSingleton<Helper>()
-                .AddDbContext<BotContext>(options =>
+            var builder = new HostBuilder()
+                .ConfigureAppConfiguration(x =>
                 {
-                    if (string.IsNullOrWhiteSpace(_config?.DBPassword))
-                        options.UseSqlite("Data Source=SCModBot.db");
-                    else
-                        options.UseSqlite(InitializeSQLiteConnection());
-                }, ServiceLifetime.Transient)
-                .AddMemoryCache()
-                .AddEFSecondLevelCache()
-                .AddSingleton(typeof(ICacheManager<>), typeof(BaseCacheManager<>))
-                .AddSingleton(typeof(ICacheManagerConfiguration),
-                        new CacheManager.Core.ConfigurationBuilder()
-                            .WithJsonSerializer()
-                            .WithMicrosoftMemoryCacheHandle()
-                            .WithExpiration(ExpirationMode.Absolute, TimeSpan.FromMinutes(30))
-                            .DisablePerformanceCounters()
-                            .DisableStatistics()
-                            .Build())
-                .BuildServiceProvider();
-            EFServiceProvider.ApplicationServices = provider;
-            return provider;
-        }
+                    x.SetBasePath(Directory.GetCurrentDirectory())
+                        .AddJsonFile("config/configuration.json");
+                })
+                .UseSerilog()
+                .ConfigureDiscordClient<DiscordSocketClient>((context, discordBuilder) =>
+                {
+                    var config = new DiscordSocketConfig
+                    {
+                        LogLevel = LogSeverity.Verbose,
+                        AlwaysDownloadUsers = true,
+                        MessageCacheSize = 200
+                    };
 
-        //My logging requirements for this project aren't complex so Serilog's global static logger will do fine
-        private Task LogConsole(LogMessage logMessage)
-        {
-            Log.Write(EventLevelFromSeverity(logMessage.Severity), "{Source}: {Message}", logMessage.Source, logMessage.Exception?.ToString() ?? logMessage.Message);
-            return Task.CompletedTask;
-        }
+                    discordBuilder.UseDiscordConfiguration(config);
+                })
+                .UseCommandService((context, config) =>
+                {
+                    config.LogLevel = LogSeverity.Verbose;
+                    config.DefaultRunMode = RunMode.Async;
+                })
+                .ConfigureServices((context, services) =>
+                {
+                    services.AddSingleton<CommandHandler>()
+                        .AddSingleton<EditDeleteLogger>()
+                        .AddSingleton<InteractiveService>()
+                        .AddSingleton<LookupService>()
+                        .AddSingleton<ModerationService>()
+                        .AddSingleton<TempBanTimer>()
+                        .AddSingleton<Helper>()
+                        .AddDbContext<BotContext>(options =>
+                        {
+                            if (string.IsNullOrWhiteSpace(dbPassword))
+                                options.UseSqlite("Data Source=SCModBot.db");
+                            else
+                                options.UseSqlite(InitializeSQLiteConnection(dbPassword));
+                        }, ServiceLifetime.Transient)
+                        .AddMemoryCache()
+                        .AddEFSecondLevelCache()
+                        .AddSingleton(typeof(ICacheManager<>), typeof(BaseCacheManager<>))
+                        .AddSingleton(typeof(ICacheManagerConfiguration),
+                            new CacheManager.Core.ConfigurationBuilder()
+                                .WithJsonSerializer()
+                                .WithMicrosoftMemoryCacheHandle()
+                                .WithExpiration(ExpirationMode.Absolute, TimeSpan.FromMinutes(30))
+                                .DisablePerformanceCounters()
+                                .DisableStatistics()
+                                .Build());
+                    //TODO Replace with singleton/factory at some point
+                    ModeratorFormats.Prefix = context.Configuration["Prefix"];
+                });
 
-        private Configuration BuildConfig()
+            var host = builder.Build();
+            using (host)
+            {
+                await host.Services.GetRequiredService<CommandHandler>().InitializeAsync();
+                host.Services.GetRequiredService<EditDeleteLogger>();
+                host.Services.GetRequiredService<TempBanTimer>();
+
+                EFServiceProvider.ApplicationServices = host.Services;
+
+                await host.RunReliablyAsync();
+            }
+        }
+        public static string GetPassword()
         {
-            var config = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("config/configuration.json")
-                .Build();
-            //Don't kill me, but I prefer a binded config
-            var configClass = new Configuration();
-            config.Bind(configClass);
             Console.Write("Please enter the database password: ");
-            configClass.DBPassword = GetPassword();
-            return configClass;
-        }
-
-        public string GetPassword()
-        {
             ConsoleKeyInfo key;
             string pass = "";
             do
@@ -163,20 +147,18 @@ namespace CitizenEnforcer
             return pass;
         }
 
-        private SqliteConnection InitializeSQLiteConnection()
+        private static SqliteConnection InitializeSQLiteConnection(string password)
         {
             var connection = new SqliteConnection("Data Source=SCModBot.db");
             connection.Open();
             var command = connection.CreateCommand();
             command.CommandText = "SELECT quote($password);";
-            command.Parameters.AddWithValue("$password", _config.DBPassword);
+            command.Parameters.AddWithValue("$password", password);
             command.CommandText = "PRAGMA key = " + command.ExecuteScalar();
             command.Parameters.Clear();
             command.ExecuteNonQuery();
             return connection;
         }
-
-        private static LogEventLevel EventLevelFromSeverity(LogSeverity severity) => (LogEventLevel)Math.Abs((int)severity - 5);
     }
 
 }

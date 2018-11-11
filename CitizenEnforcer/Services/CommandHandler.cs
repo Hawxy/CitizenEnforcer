@@ -20,11 +20,11 @@ along with this program.If not, see http://www.gnu.org/licenses/ */
 using System;
 using System.Reflection;
 using System.Threading.Tasks;
-using CitizenEnforcer.Settings;
 using CitizenEnforcer.TypeReaders;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using Microsoft.Extensions.Configuration;
 
 namespace CitizenEnforcer.Services
 {
@@ -33,10 +33,10 @@ namespace CitizenEnforcer.Services
         private readonly IServiceProvider _provider;
         private readonly DiscordSocketClient _client;
         private readonly CommandService _commandService;
-        private readonly Configuration _config;
+        private readonly IConfiguration _config;
         private readonly Helper _helper;
 
-        public CommandHandler(IServiceProvider provider, DiscordSocketClient client, CommandService commandService, Configuration config, Helper helper)
+        public CommandHandler(IServiceProvider provider, DiscordSocketClient client, CommandService commandService, IConfiguration config, Helper helper)
         {
             _provider = provider;
             _client = client;
@@ -58,7 +58,7 @@ namespace CitizenEnforcer.Services
             if (message.Source != MessageSource.User) return;
 
             int argPos = 0;
-            if (!message.HasStringPrefix(_config.Prefix, ref argPos) && !message.HasMentionPrefix(_client.CurrentUser, ref argPos)) return;
+            if (!message.HasStringPrefix(_config["Prefix"], ref argPos) && !message.HasMentionPrefix(_client.CurrentUser, ref argPos)) return;
 
             var context = new SocketCommandContext(_client, message);
             var result = await _commandService.ExecuteAsync(context, argPos, _provider);
@@ -74,7 +74,7 @@ namespace CitizenEnforcer.Services
                     case CommandError.BadArgCount:
                         string[] messagecontent = message.ToString().Split();
                         await context.Channel.SendMessageAsync("Incorrect command usage, showing helper:");
-                        await _helper.HelpAsync(context, messagecontent[0].Replace(_config.Prefix, string.Empty));
+                        await _helper.HelpAsync(context, messagecontent[0].Replace(_config["Prefix"], string.Empty));
                         break;
                     case CommandError.ObjectNotFound:
                     case CommandError.MultipleMatches:

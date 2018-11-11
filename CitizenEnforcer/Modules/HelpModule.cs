@@ -25,15 +25,19 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using CitizenEnforcer.Services;
 using Discord;
+using Discord.Addons.Hosting.Reliability;
 using Discord.Addons.Interactive;
 using Discord.Commands;
+using Microsoft.Extensions.Hosting;
 
 namespace CitizenEnforcer.Modules
 {
     public class HelpModule : ModuleBase<SocketCommandContext>
     {
-        public Helper _helpservice { get; set; }
+        public Helper _help { get; set; }
         public InteractiveService _interactiveService { get; set; }
+
+        public IHost _host { get; set; }
 
         [Command("help")]
         [Summary("Displays list of available commands")]
@@ -41,11 +45,11 @@ namespace CitizenEnforcer.Modules
         public async Task Help()
         {
             await _interactiveService.ReplyAndDeleteAsync(Context, "Sending you list of my commands now!", timeout: TimeSpan.FromSeconds(10));
-            await _helpservice.HelpAsync(Context);
+            await _help.HelpAsync(Context);
         }
         [Command("help")]
         [Summary("Shows information about a command")]
-        public Task Help([Remainder]string command) => _helpservice.HelpAsync(Context, command);
+        public Task Help([Remainder]string command) => _help.HelpAsync(Context, command);
 
         [Command("info")]
         [Alias("stats")]
@@ -72,11 +76,10 @@ namespace CitizenEnforcer.Modules
 
         [Command("shutdown")]
         [RequireOwner]
-        public async Task StopBot()
+        public async Task Shutdown()
         {
             await ReplyAsync("Goodbye!");
-            await Context.Client.StopAsync();
-            Environment.Exit(0);
+            await _host.StopReliablyAsync();
         }
     }
 }

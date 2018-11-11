@@ -21,10 +21,10 @@ using System;
 using System.Threading.Tasks;
 using CitizenEnforcer.Context;
 using CitizenEnforcer.Models;
-using CitizenEnforcer.Settings;
 using Discord.Commands;
 using EFSecondLevelCache.Core;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CitizenEnforcer.Preconditions
@@ -38,19 +38,19 @@ namespace CitizenEnforcer.Preconditions
         }
         public override async Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command, IServiceProvider services)
         {
-            Configuration config = services.GetService<Configuration>();
+            IConfiguration config = services.GetService<IConfiguration>();
             Guild guild = null;
             if (_type >= InitializedType.Basic)
             {
                 var botContext = services.GetService<BotContext>();
                 guild = await botContext.Guilds.AsNoTracking().Cacheable().FirstOrDefaultAsync(x => x.GuildId == context.Guild.Id);
                 if (guild == null)
-                    return PreconditionResult.FromError($"Failure: This bot has not been setup on this server, use ``{config.Prefix}setup initialize``");
+                    return PreconditionResult.FromError($"Failure: This bot has not been setup on this server, use ``{config["Prefix"]}setup initialize``");
             }
             if (_type == InitializedType.All)
             {
                 if (!guild.IsModerationEnabled)
-                    return PreconditionResult.FromError($"Failure: Moderation tools are disabled. Enable them with ``{config.Prefix}setup IsModerationEnabled true``");
+                    return PreconditionResult.FromError($"Failure: Moderation tools are disabled. Enable them with ``{config["Prefix"]}setup IsModerationEnabled true``");
                
             }
             return PreconditionResult.FromSuccess();

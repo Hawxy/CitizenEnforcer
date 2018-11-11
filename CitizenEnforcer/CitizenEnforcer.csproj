@@ -20,10 +20,11 @@
   <ItemGroup>
     <PackageReference Include="CacheManager.Microsoft.Extensions.Caching.Memory" Version="1.1.2" />
     <PackageReference Include="CacheManager.Serialization.Json" Version="1.1.2" />
+    <PackageReference Include="Discord.Addons.Hosting" Version="1.1.0" />
     <PackageReference Include="Discord.Addons.Interactive" Version="1.0.1" />
-    <PackageReference Include="Discord.Net.Commands" Version="2.0.0-beta2-01018" />
-    <PackageReference Include="Discord.Net.WebSocket" Version="2.0.0-beta2-01018" />
-    <PackageReference Include="EFSecondLevelCache.Core" Version="1.6.2" />
+    <PackageReference Include="Discord.Net.Commands" Version="2.0.0-beta2-01022" />
+    <PackageReference Include="Discord.Net.WebSocket" Version="2.0.0-beta2-01022" />
+    <PackageReference Include="EFSecondLevelCache.Core" Version="1.6.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="2.1.4" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite.Core" Version="2.1.4" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="2.1.4">
@@ -31,9 +32,10 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.1.1" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="2.1.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.1.1" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="2.1.1" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="2.0.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="3.1.1" />
     <PackageReference Include="SQLitePCLRaw.bundle_sqlcipher" Version="1.1.11" />
   </ItemGroup>

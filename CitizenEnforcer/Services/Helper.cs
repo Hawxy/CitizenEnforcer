@@ -21,10 +21,10 @@ using System;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using CitizenEnforcer.Settings;
 using Discord;
 using Discord.Commands;
 using Discord.Net;
+using Microsoft.Extensions.Configuration;
 
 namespace CitizenEnforcer.Services
 {
@@ -32,9 +32,9 @@ namespace CitizenEnforcer.Services
     {
         private readonly CommandService _service;
         private readonly IServiceProvider _map;
-        private readonly Configuration _config;
+        private readonly IConfiguration _config;
 
-        public Helper(CommandService service, IServiceProvider map, Configuration config)
+        public Helper(CommandService service, IServiceProvider map, IConfiguration config)
         {
             _service = service;
             _map = map;
@@ -43,11 +43,11 @@ namespace CitizenEnforcer.Services
 
         public async Task HelpAsync(SocketCommandContext context)
         {
-            string prefix = _config.Prefix;
+            string prefix = _config["Prefix"];
             var builder = new EmbedBuilder
             {
                 Color = new Color(114, 137, 218),
-                Description = $"These are the commands you have access to on the guild **{context.Guild.Name}**.\nAvailable commands differ based on your guild permissions.\nFor more information, use {_config.Prefix}help [command]"
+                Description = $"These are the commands you have access to on the guild **{context.Guild.Name}**.\nAvailable commands differ based on your guild permissions.\nFor more information, use {_config["Prefix"]}help [command]"
             };
 
             foreach (var module in _service.Modules)

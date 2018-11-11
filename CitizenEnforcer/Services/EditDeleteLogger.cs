@@ -20,21 +20,21 @@ along with this program.If not, see http://www.gnu.org/licenses/ */
 using System.Linq;
 using System.Threading.Tasks;
 using CitizenEnforcer.Context;
-using CitizenEnforcer.Settings;
 using Discord;
 using Discord.WebSocket;
 using EFSecondLevelCache.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 
 namespace CitizenEnforcer.Services
 {
     public class EditDeleteLogger
     {
         private readonly BotContext _botContext;
-        private readonly Configuration _configuration;
+        private readonly IConfiguration _configuration;
         private readonly IMemoryCache _banCache;
-        public EditDeleteLogger(BotContext botContext, Configuration configuration, DiscordSocketClient client, IMemoryCache memoryCache)
+        public EditDeleteLogger(BotContext botContext, IConfiguration configuration, DiscordSocketClient client, IMemoryCache memoryCache)
         {
             _botContext = botContext;
             _configuration = configuration;
@@ -48,7 +48,7 @@ namespace CitizenEnforcer.Services
             //if the message isn't cached, the author isn't a user, its a bot command, or the user/channel is in the ban cache then don't do anything
             if (message == null 
                 || message.Source != MessageSource.User 
-                || message.Content.StartsWith(_configuration.Prefix) 
+                || message.Content.StartsWith(_configuration["Prefix"]) 
                 || _banCache.Get(message.Author.Id) != null 
                 || _banCache.Get(channel.Id) != null)
                 return;
