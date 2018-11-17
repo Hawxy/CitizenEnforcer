@@ -69,29 +69,28 @@ namespace CitizenEnforcer.Services
             if (!command.IsSpecified && result.IsSuccess)
                 return;
 
-            if (result.Error.HasValue)
+            switch (result.Error)
             {
-                switch (result.Error)
-                {
-                    case CommandError.UnknownCommand:
-                        break;
-                    case CommandError.BadArgCount:
-                        await context.Channel.SendMessageAsync("Incorrect command usage, showing helper:");
-                        EmbedBuilder builder = _helper.GetHelpInformationBuilder(command.Value);
-                        await context.Channel.SendMessageAsync(embed: builder.Build());
-                        break;
-                    case CommandError.ParseFailed:
-                    case CommandError.ObjectNotFound:
-                    case CommandError.MultipleMatches:
-                    case CommandError.UnmetPrecondition:
-                        await context.Channel.SendMessageAsync(result.ErrorReason);
-                        break;
-                    case CommandError.Exception:
-                        await context.Channel.SendMessageAsync("Unable to comply, an internal exception was detected.");
-                        break;
-                    case CommandError.Unsuccessful:
-                        break;
-                }
+                case CommandError.UnknownCommand:
+                    break;
+                case CommandError.BadArgCount:
+                    await context.Channel.SendMessageAsync("Incorrect command usage, showing helper:");
+                    EmbedBuilder builder = _helper.GetHelpInformationBuilder(command.Value);
+                    await context.Channel.SendMessageAsync(embed: builder.Build());
+                    break;
+                case CommandError.ParseFailed:
+                case CommandError.ObjectNotFound:
+                case CommandError.MultipleMatches:
+                case CommandError.UnmetPrecondition:
+                    await context.Channel.SendMessageAsync(result.ErrorReason);
+                    break;
+                case CommandError.Exception:
+                    await context.Channel.SendMessageAsync("Unable to comply, an internal exception was detected.");
+                    break;
+                case CommandError.Unsuccessful:
+                    break;
+                case null:
+                    break;
             }
         }
     }
