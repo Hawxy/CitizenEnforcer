@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using CitizenEnforcer.Context;
 using CitizenEnforcer.Models;
 using Discord;
 using Discord.WebSocket;
-using EFSecondLevelCache.Core;
 using Microsoft.EntityFrameworkCore;
 
 namespace CitizenEnforcer.Services

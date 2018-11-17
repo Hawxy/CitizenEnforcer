@@ -43,7 +43,8 @@ namespace CitizenEnforcer.Services
             _commandService = commandService;
             _config = config;
             _helper = helper;
-            client.MessageReceived += HandleMessage;
+            _client.MessageReceived += HandleMessageAsync;
+            _commandService.CommandExecuted += CommandExecutedAsync;
         }
 
         public async Task InitializeAsync()
@@ -52,7 +53,7 @@ namespace CitizenEnforcer.Services
             await _commandService.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
         }
 
-        private async Task HandleMessage(SocketMessage incomingMessage)
+        private async Task HandleMessageAsync(SocketMessage incomingMessage)
         {
             if (!(incomingMessage is SocketUserMessage message)) return;
             if (message.Source != MessageSource.User) return;
@@ -61,21 +62,25 @@ namespace CitizenEnforcer.Services
             if (!message.HasStringPrefix(_config["Prefix"], ref argPos) && !message.HasMentionPrefix(_client.CurrentUser, ref argPos)) return;
 
             var context = new SocketCommandContext(_client, message);
-            var result = await _commandService.ExecuteAsync(context, argPos, _provider);
+            await _commandService.ExecuteAsync(context, argPos, _provider);
+        }
+        public async Task CommandExecutedAsync(Optional<CommandInfo> command, ICommandContext context, IResult result)
+        {
+            if (!command.IsSpecified && result.IsSuccess)
+                return;
+
             if (result.Error.HasValue)
             {
                 switch (result.Error)
                 {
                     case CommandError.UnknownCommand:
                         break;
-                    case CommandError.ParseFailed:
-                        await context.Channel.SendMessageAsync(result.ErrorReason);
-                        break;
                     case CommandError.BadArgCount:
-                        string[] messagecontent = message.ToString().Split();
                         await context.Channel.SendMessageAsync("Incorrect command usage, showing helper:");
-                        await _helper.HelpAsync(context, messagecontent[0].Replace(_config["Prefix"], string.Empty));
+                        EmbedBuilder builder = _helper.GetHelpInformationBuilder(command.Value);
+                        await context.Channel.SendMessageAsync(embed: builder.Build());
                         break;
+                    case CommandError.ParseFailed:
                     case CommandError.ObjectNotFound:
                     case CommandError.MultipleMatches:
                     case CommandError.UnmetPrecondition:

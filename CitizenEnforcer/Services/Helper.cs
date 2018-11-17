@@ -41,7 +41,7 @@ namespace CitizenEnforcer.Services
             _config = config;
         }
 
-        public async Task HelpAsync(SocketCommandContext context)
+        public async Task HelpAsync(ICommandContext context)
         {
             string prefix = _config["Prefix"];
             var builder = new EmbedBuilder
@@ -80,7 +80,7 @@ namespace CitizenEnforcer.Services
             try
             {
                 var DMChannel = await context.User.GetOrCreateDMChannelAsync();
-                await DMChannel.SendMessageAsync("", false, builder.Build());
+                await DMChannel.SendMessageAsync(embed: builder.Build());
             }
             catch (HttpException)
             {
@@ -89,7 +89,7 @@ namespace CitizenEnforcer.Services
             }
         }
 
-        public async Task HelpAsync(SocketCommandContext context, string command)
+        public async Task HelpAsync(ICommandContext context, string command)
         {
             var result = _service.Search(context, command);
 
@@ -118,7 +118,23 @@ namespace CitizenEnforcer.Services
                 });
             }
 
-            await context.Channel.SendMessageAsync("", false, builder.Build());
+            await context.Channel.SendMessageAsync(embed: builder.Build());
+        }
+
+        public EmbedBuilder GetHelpInformationBuilder(CommandInfo info)
+        {
+            var builder = new EmbedBuilder().WithColor(114, 137, 218);
+
+            var param = info.Parameters.Select(p => p.Name);
+            builder.AddField(x =>
+            {
+                x.Name = string.Join(", ", info.Aliases);
+                x.Value = $"Parameters: {(param.Any() ? string.Join(", ", param) : "None")}\n" +
+                          $"Summary: {info.Summary}";
+                x.IsInline = false;
+            });
+
+            return builder;
         }
     }
 }

@@ -52,7 +52,7 @@ namespace CitizenEnforcer.Services
 
             var builder = ModeratorFormats.GetUserLookupBuilder(user, foundLogs, highestInfraction, currentlybanned);
 
-            await context.Channel.SendMessageAsync("", embed: builder.Build());
+            await context.Channel.SendMessageAsync(embed: builder.Build());
         }
 
         public async Task LookupCase(SocketCommandContext context, ulong caseID)
@@ -99,7 +99,7 @@ namespace CitizenEnforcer.Services
                         throw new ArgumentOutOfRangeException();
                 }
 
-            await context.Channel.SendMessageAsync("", embed: embed.Build());
+            await context.Channel.SendMessageAsync(embed: embed.Build());
         }
     }
 }
