@@ -52,7 +52,7 @@ namespace CitizenEnforcer.Modules
             {
                 await ReplyAsync("This guild is already registered, use the set commands to modify settings!");
             }
-            await ReplyAsync("State the logging channel that message events will be saved to (edit/deletes):");
+            await ReplyAsync("State the logging channel that guild events will be saved to (message edit/deletes + user edits):");
             var response = await _interactive.NextMessageAsync(Context, new MentionsChannel(), TimeSpan.FromSeconds(200));
             var channel = response.MentionedChannels.ElementAt(0);
 

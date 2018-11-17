@@ -81,6 +81,7 @@ namespace CitizenEnforcer
                 {
                     services.AddSingleton<CommandHandler>()
                         .AddSingleton<EditDeleteLogger>()
+                        .AddSingleton<UserUpdatedLogger>()
                         .AddSingleton<InteractiveService>()
                         .AddSingleton<LookupService>()
                         .AddSingleton<ModerationService>()
@@ -113,6 +114,7 @@ namespace CitizenEnforcer
             {
                 await host.Services.GetRequiredService<CommandHandler>().InitializeAsync();
                 host.Services.GetRequiredService<EditDeleteLogger>();
+                host.Services.GetRequiredService<UserUpdatedLogger>();
                 host.Services.GetRequiredService<TempBanTimer>();
 
                 EFServiceProvider.ApplicationServices = host.Services;
