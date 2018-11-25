@@ -147,7 +147,6 @@ namespace CitizenEnforcer.Modules
                 await _moderationService.SendMessageToAnnounce(Context.Guild, $"***User {user} has been unmuted***");
                 await _moderationService.SendEmbedToModLog(Context.Guild, SecurityFormats.GetUserUnMuteLoggedBuilder(user, Context.User));
             }
-           
         }
 
         [Command("purge")]

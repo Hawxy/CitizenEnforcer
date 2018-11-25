@@ -41,16 +41,16 @@ namespace CitizenEnforcer.Services
         public async Task LookupUser(SocketCommandContext context, IUser user)
         {
             var foundLogs = await _botContext.ModLogs.AsNoTracking().Include(z=> z.TempBan).Where(x => x.UserId == user.Id && x.GuildId == context.Guild.Id).ToListAsync();
-            bool currentlybanned = await context.Guild.GetBanSafelyAsync(user.Id) != null;
+            bool currentlyBanned = await context.Guild.GetBanSafelyAsync(user.Id) != null;
             
             if (foundLogs.Count == 0)
             {
-                await context.Channel.SendMessageAsync($"No previous moderator actions have been found for this user. Currently banned: {currentlybanned}");
+                await context.Channel.SendMessageAsync($"No previous moderator actions have been found for this user. Currently banned: {currentlyBanned}");
                 return;
             }
             var highestInfraction = foundLogs.Max(x => x.InfractionType);
 
-            var builder = ModeratorFormats.GetUserLookupBuilder(user, foundLogs, highestInfraction, currentlybanned);
+            var builder = ModeratorFormats.GetUserLookupBuilder(user, foundLogs, highestInfraction, currentlyBanned);
 
             await context.Channel.SendMessageAsync(embed: builder.Build());
         }
@@ -64,36 +64,23 @@ namespace CitizenEnforcer.Services
                 return;
             }
 
-            var modUser = context.Guild.GetUser(foundCase.ModId);
-            var caseUser = context.Guild.GetUser(foundCase.UserId);
-            IUser banUser = null;
-            if (caseUser == null)
-            {
-                banUser = (await context.Guild.GetBanSafelyAsync(foundCase.UserId))?.User;
-            }
+            var modUser = context.Client.GetUser(foundCase.ModId);
+            var caseUser = context.Client.GetUser(foundCase.UserId);
 
             EmbedBuilder embed;
             switch(foundCase.InfractionType)
                 {
                     case InfractionType.Warning:
-                        embed = caseUser != null
-                            ? ModeratorFormats.GetWarnBuilder(caseUser, modUser, caseID, foundCase.Reason, foundCase.DateTime)
-                            : ModeratorFormats.GetWarnBuilder(banUser, modUser, caseID, foundCase.Reason, foundCase.DateTime);
+                        embed = ModeratorFormats.GetWarnBuilder(caseUser, modUser, caseID, foundCase.Reason, foundCase.DateTime);
                         break;
                     case InfractionType.Kick:
-                        embed = caseUser != null
-                            ? ModeratorFormats.GetKickBuilder(caseUser, modUser, caseID, foundCase.Reason, foundCase.DateTime)
-                            : ModeratorFormats.GetKickBuilder(banUser, modUser, caseID, foundCase.Reason, foundCase.DateTime);
+                        embed = ModeratorFormats.GetKickBuilder(caseUser, modUser, caseID, foundCase.Reason, foundCase.DateTime);
                         break;
                     case InfractionType.TempBan:
-                        embed = caseUser != null
-                            ? ModeratorFormats.GetTempBanBuilder(caseUser, modUser, caseID, foundCase.Reason, foundCase.DateTime, foundCase.TempBan.ExpireDate)
-                            : ModeratorFormats.GetTempBanBuilder(banUser, modUser, caseID, foundCase.Reason, foundCase.DateTime, foundCase.TempBan.ExpireDate);
+                        embed = ModeratorFormats.GetTempBanBuilder(caseUser, modUser, caseID, foundCase.Reason, foundCase.DateTime, foundCase.TempBan.ExpireDate);
                         break;
                     case InfractionType.Ban:
-                        embed = caseUser != null
-                            ? ModeratorFormats.GetBanBuilder(caseUser, modUser, caseID, foundCase.Reason, foundCase.DateTime)
-                            : ModeratorFormats.GetBanBuilder(banUser, modUser, caseID, foundCase.Reason, foundCase.DateTime);
+                        embed = ModeratorFormats.GetBanBuilder(caseUser, modUser, caseID, foundCase.Reason, foundCase.DateTime);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();

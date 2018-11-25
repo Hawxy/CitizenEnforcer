@@ -21,7 +21,12 @@ namespace CitizenEnforcer.Services
 
         private async Task HandleUserUpdated(SocketUser before, SocketUser after)
         {
-            if (before.Username == after.Username && before.AvatarId == after.AvatarId) return;
+            if (after.IsBot 
+                || string.IsNullOrEmpty(before.Username) 
+                || before.Username == after.Username 
+                && before.AvatarId == after.AvatarId)
+                return;
+
             IReadOnlyCollection<SocketGuild> guilds = before.MutualGuilds;
 
             foreach (var guild in guilds)
