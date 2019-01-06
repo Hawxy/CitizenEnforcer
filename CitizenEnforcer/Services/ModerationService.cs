@@ -164,10 +164,10 @@ namespace CitizenEnforcer.Services
 
             await SendMessageToAnnounce(context.Guild, $"***{user} has been temporarily banned from the server***");
         }
-        public async Task BanUser(SocketCommandContext context, IUser user, string reason, bool isEscalation, bool isHardBan)
+        public async Task BanUser(SocketCommandContext context, IUser user, BanType type, string reason)
         {
             await context.Message.DeleteAsync();
-            if (isEscalation)
+            if (type == BanType.Escalation)
             {
                 var foundtb = await _botContext.TempBans.Include(y => y.ModLog).Cacheable().FirstOrDefaultAsync(x => x.TempBanActive && x.ModLog.UserId == user.Id);
                 if (foundtb != null)
@@ -185,7 +185,7 @@ namespace CitizenEnforcer.Services
             {
                 _banCache.Set(user.Id, new CacheModel(context.Guild.Id), TimeSpan.FromSeconds(5));
                 await SendMessageToUser(user, $"You have been permanently banned from the guild ``{context.Guild.Name}`` {(string.IsNullOrWhiteSpace(reason) ? string.Empty : $"for: ``{reason}``")}");
-                if (isHardBan)
+                if (type == BanType.HardBan)
                     await context.Guild.AddBanAsync(user, 2);
                 else
                     await context.Guild.AddBanAsync(user);
@@ -273,6 +273,13 @@ namespace CitizenEnforcer.Services
         {
             BanReject,
             UnbanReject
+        }
+
+        public enum BanType
+        {
+            HardBan,
+            SoftBan,
+            Escalation
         }
     }
 }

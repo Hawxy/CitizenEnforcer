@@ -60,21 +60,21 @@ namespace CitizenEnforcer.Modules
         [Alias("sb")]
         [RequireBotPermission(GuildPermission.BanMembers)]
         [Summary("Bans a user without deleting message history. Supports an optional specified reason")]
-        public Task SoftBan([NotSelf]IGuildUser user, [Remainder] string reason = null) => _moderationService.BanUser(Context, user, Context.Message.ResolveAtString(reason), false, false);
+        public Task SoftBan([NotSelf]IGuildUser user, [Remainder] string reason = null) => _moderationService.BanUser(Context, user, ModerationService.BanType.SoftBan, Context.Message.ResolveAtString(reason));
 
         [Priority(1000)]
         [Command("ban")]
         [Alias("b")]
         [RequireBotPermission(GuildPermission.BanMembers)]
         [Summary("Bans and deletes recent message history. Supports an optional specified reason")]
-        public Task Ban([NotSelf]IGuildUser user, [Remainder] string reason = null) => _moderationService.BanUser(Context, user, Context.Message.ResolveAtString(reason), false, true);
+        public Task Ban([NotSelf]IGuildUser user, [Remainder] string reason = null) => _moderationService.BanUser(Context, user, ModerationService.BanType.HardBan, Context.Message.ResolveAtString(reason));
 
         [Priority(500)]
         [Command("ban")]
         [Alias("b")]
         [RequireBotPermission(GuildPermission.BanMembers)]
         [Summary("Increases an existing temp-ban to a permanent ban. Supports an optional specified reason")]
-        public Task Ban(IBan bannedUser, [Remainder] string reason = null) => _moderationService.BanUser(Context, bannedUser.User, Context.Message.ResolveAtString(reason), true, false);
+        public Task Ban(IBan bannedUser, [Remainder] string reason = null) => _moderationService.BanUser(Context, bannedUser.User, ModerationService.BanType.Escalation, Context.Message.ResolveAtString(reason));
 
         [Command("unban")]
         [Alias("ub")]

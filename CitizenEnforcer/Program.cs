@@ -19,7 +19,6 @@ along with this program.If not, see http://www.gnu.org/licenses/ */
 
 using System;
 using System.IO;
-using System.Reflection;
 using System.Threading.Tasks;
 using CacheManager.Core;
 using CitizenEnforcer.Common;
