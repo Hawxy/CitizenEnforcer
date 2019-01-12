@@ -166,7 +166,7 @@ namespace CitizenEnforcer.Modules
 
                 await ReplyAsync(builder.ToString());
             }
-
+            //TODO rewrite this
             [Command("add")]
             [Summary("Adds additional channels to monitor for edit/deletes")]
             public async Task AddRegisteredChannels(params IGuildChannel[] channels)
@@ -174,7 +174,7 @@ namespace CitizenEnforcer.Modules
                 var currentchannels = await _botContext.RegisteredChannels.Include(x => x.Guild).Where(x => x.GuildId == Context.Guild.Id).ToListAsync();
                 foreach (IGuildChannel guildChannel in channels)
                 {
-                    if (!currentchannels.Any(x => x.ChannelId == guildChannel.GuildId))
+                    if (!currentchannels.Any(x => x.ChannelId == guildChannel.Id))
                         _botContext.RegisteredChannels.Add(new RegisteredChannel(guildChannel.Id, Context.Guild.Id));
                 }
                 await _botContext.SaveChangesAsync();
