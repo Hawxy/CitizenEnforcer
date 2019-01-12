@@ -1,5 +1,5 @@
 # CitizenEnforcer
-A Discord.Net moderation & edit/delete log bot running on .NET Core 2.1. Created for a partnered Discord server (~14,000 users)
+A Discord.Net moderation & edit/delete log bot running on .NET Core 2.2. Created for a partnered Discord server (~14,000 users)
 
 [![Build Status](https://dev.azure.com/GithubHawxy/CitizenEnforcer/_apis/build/status/Hawxy.CitizenEnforcer)](https://dev.azure.com/GithubHawxy/CitizenEnforcer/_build/latest?definitionId=1)
 
