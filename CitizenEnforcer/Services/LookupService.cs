@@ -57,7 +57,7 @@ namespace CitizenEnforcer.Services
 
         public async Task LookupCase(SocketCommandContext context, ulong caseID)
         {
-            var foundCase = await _botContext.ModLogs.AsNoTracking().FirstOrDefaultAsync(x => x.ModLogCaseID == caseID && x.GuildId == context.Guild.Id);
+            var foundCase = await _botContext.ModLogs.AsNoTracking().Include(y=> y.TempBan).FirstOrDefaultAsync(x => x.ModLogCaseID == caseID && x.GuildId == context.Guild.Id);
             if (foundCase == null)
             {
                 await context.Channel.SendMessageAsync("Case not found");
