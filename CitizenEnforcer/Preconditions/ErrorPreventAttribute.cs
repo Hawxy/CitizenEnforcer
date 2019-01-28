@@ -21,17 +21,26 @@ using System;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using Discord.WebSocket;
 
 namespace CitizenEnforcer.Preconditions
 {
-    [AttributeUsage(AttributeTargets.Parameter)]
-    public class NotSelfAttribute : ParameterPreconditionAttribute
+    public class ErrorPreventAttribute : ParameterPreconditionAttribute
     {
-        public override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, ParameterInfo parameter, object value, IServiceProvider services)
+        public override async Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, ParameterInfo parameter, object value, IServiceProvider services)
         {
-            if(value is IUser user && user.Id != context.User.Id)
-                return Task.FromResult(PreconditionResult.FromSuccess());
-            return Task.FromResult(PreconditionResult.FromError("You can't use this command on yourself!"));
+            if (value is IUser user && user.Id != context.User.Id)
+            {
+                var bot = await context.Guild.GetCurrentUserAsync();
+
+                if (bot is SocketGuildUser socketBot && user is SocketGuildUser socketUser)
+                    if (socketUser.Hierarchy > socketBot.Hierarchy)
+                        return PreconditionResult.FromError("Nah.");
+                
+                return PreconditionResult.FromSuccess();
+            }
+               
+            return PreconditionResult.FromError("You can't use this command on yourself!");
 
         }
     }

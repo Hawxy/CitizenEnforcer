@@ -28,7 +28,11 @@ namespace CitizenEnforcer.Common
     public static class ModeratorFormats
     {
         public static string Prefix;
-        public static EmbedBuilder GetWarnBuilder(IUser user, IUser mod, ulong caseID, string reason, DateTimeOffset postedDate)
+
+
+        public static EmbedBuilder GetWarnBuilder(IUser user, IUser mod, ulong caseID, string reason, DateTimeOffset postedDate) => 
+            GetWarnBuilder(user.Username, user.Id, mod, caseID, reason, postedDate);
+        public static EmbedBuilder GetWarnBuilder(string username, ulong userID, IUser mod, ulong caseID, string reason, DateTimeOffset postedDate)
         {
             var manbuilder =
                 new EmbedBuilder().WithColor(new Color(2, 136, 209))
@@ -37,13 +41,13 @@ namespace CitizenEnforcer.Common
             manbuilder.AddField(z =>
             {
                 z.Name = "User Name";
-                z.Value = user.ToString();
+                z.Value = username;
                 z.IsInline = true;
             });
             manbuilder.AddField(z =>
             {
                 z.Name = "UserID";
-                z.Value = user.Id;
+                z.Value = userID;
                 z.IsInline = true;
             });
             manbuilder.AddField(z =>
@@ -55,7 +59,9 @@ namespace CitizenEnforcer.Common
             return manbuilder;
         }
 
-        public static EmbedBuilder GetKickBuilder(IUser user, IUser mod, ulong caseID, string reason, DateTimeOffset postedDate)
+        public static EmbedBuilder GetKickBuilder(IUser user, IUser mod, ulong caseID, string reason, DateTimeOffset postedDate) => 
+            GetKickBuilder(user.Username, user.Id, mod, caseID, reason, postedDate);
+        public static EmbedBuilder GetKickBuilder(string username, ulong userID, IUser mod, ulong caseID, string reason, DateTimeOffset postedDate)
         {
             var manbuilder =
                 new EmbedBuilder().WithColor(new Color(253, 216, 53))
@@ -64,13 +70,13 @@ namespace CitizenEnforcer.Common
             manbuilder.AddField(z =>
             {
                 z.Name = "User Name";
-                z.Value = user.ToString();
+                z.Value = username;
                 z.IsInline = true;
             });
             manbuilder.AddField(z =>
             {
                 z.Name = "UserID";
-                z.Value = user.Id;
+                z.Value = userID;
                 z.IsInline = true;
             });
             manbuilder.AddField(z =>
@@ -81,7 +87,9 @@ namespace CitizenEnforcer.Common
             return manbuilder;
         }
 
-        public static EmbedBuilder GetTempBanBuilder(IUser user, IUser mod, ulong caseID, string reason, DateTimeOffset postedDate, DateTimeOffset endTime)
+        public static EmbedBuilder GetTempBanBuilder(IUser user, IUser mod, ulong caseID, string reason, DateTimeOffset postedDate, DateTimeOffset endTime) =>
+            GetTempBanBuilder(user.Username, user.Id, mod, caseID, reason, postedDate, endTime);
+        public static EmbedBuilder GetTempBanBuilder(string username, ulong userID, IUser mod, ulong caseID, string reason, DateTimeOffset postedDate, DateTimeOffset endTime)
         {
             var manbuilder =
                 new EmbedBuilder().WithColor(new Color(251, 140, 0))
@@ -90,13 +98,13 @@ namespace CitizenEnforcer.Common
             manbuilder.AddField(z =>
             {
                 z.Name = "User Name";
-                z.Value = user.ToString();
+                z.Value = username;
                 z.IsInline = true;
             });
             manbuilder.AddField(z =>
             {
                 z.Name = "UserID";
-                z.Value = user.Id;
+                z.Value = userID;
                 z.IsInline = true;
             });
             manbuilder.AddField(z =>
@@ -113,7 +121,9 @@ namespace CitizenEnforcer.Common
             return manbuilder;
         }
 
-        public static EmbedBuilder GetBanBuilder(IUser user, IUser mod, ulong caseID, string reason, DateTimeOffset postedDate)
+        public static EmbedBuilder GetBanBuilder(IUser user, IUser mod, ulong caseID, string reason, DateTimeOffset postedDate) =>
+            GetBanBuilder(user.Username, mod.Id, mod, caseID, reason, postedDate);
+        public static EmbedBuilder GetBanBuilder(string username, ulong userID, IUser mod, ulong caseID, string reason, DateTimeOffset postedDate)
         {
             var manbuilder =
                 new EmbedBuilder().WithColor(new Color(229, 57, 53))
@@ -127,13 +137,13 @@ namespace CitizenEnforcer.Common
             manbuilder.AddField(z =>
             {
                 z.Name = "User Name";
-                z.Value = user.ToString();
+                z.Value = username;
                 z.IsInline = true;
             });
             manbuilder.AddField(z =>
             {
                 z.Name = "UserID";
-                z.Value = user.Id;
+                z.Value = userID;
                 z.IsInline = true;
             });
             manbuilder.AddField(z =>
