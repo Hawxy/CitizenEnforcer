@@ -31,7 +31,7 @@ namespace CitizenEnforcer.Common
 
 
         public static EmbedBuilder GetWarnBuilder(IUser user, IUser mod, ulong caseID, string reason, DateTimeOffset postedDate) => 
-            GetWarnBuilder(user.Username, user.Id, mod, caseID, reason, postedDate);
+            GetWarnBuilder(user.ToString(), user.Id, mod, caseID, reason, postedDate);
         public static EmbedBuilder GetWarnBuilder(string username, ulong userID, IUser mod, ulong caseID, string reason, DateTimeOffset postedDate)
         {
             var manbuilder =
@@ -60,7 +60,7 @@ namespace CitizenEnforcer.Common
         }
 
         public static EmbedBuilder GetKickBuilder(IUser user, IUser mod, ulong caseID, string reason, DateTimeOffset postedDate) => 
-            GetKickBuilder(user.Username, user.Id, mod, caseID, reason, postedDate);
+            GetKickBuilder(user.ToString(), user.Id, mod, caseID, reason, postedDate);
         public static EmbedBuilder GetKickBuilder(string username, ulong userID, IUser mod, ulong caseID, string reason, DateTimeOffset postedDate)
         {
             var manbuilder =
@@ -88,7 +88,7 @@ namespace CitizenEnforcer.Common
         }
 
         public static EmbedBuilder GetTempBanBuilder(IUser user, IUser mod, ulong caseID, string reason, DateTimeOffset postedDate, DateTimeOffset endTime) =>
-            GetTempBanBuilder(user.Username, user.Id, mod, caseID, reason, postedDate, endTime);
+            GetTempBanBuilder(user.ToString(), user.Id, mod, caseID, reason, postedDate, endTime);
         public static EmbedBuilder GetTempBanBuilder(string username, ulong userID, IUser mod, ulong caseID, string reason, DateTimeOffset postedDate, DateTimeOffset endTime)
         {
             var manbuilder =
@@ -122,7 +122,7 @@ namespace CitizenEnforcer.Common
         }
 
         public static EmbedBuilder GetBanBuilder(IUser user, IUser mod, ulong caseID, string reason, DateTimeOffset postedDate) =>
-            GetBanBuilder(user.Username, mod.Id, mod, caseID, reason, postedDate);
+            GetBanBuilder(user.ToString(), user.Id, mod, caseID, reason, postedDate);
         public static EmbedBuilder GetBanBuilder(string username, ulong userID, IUser mod, ulong caseID, string reason, DateTimeOffset postedDate)
         {
             var manbuilder =

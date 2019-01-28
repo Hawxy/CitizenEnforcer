@@ -69,7 +69,7 @@ namespace CitizenEnforcer.Services
 
             //We prefer to get the latest username, but if we can't, fallback to the database.
             IUser caseUser = context.Client.GetUser(foundCase.UserId) ?? (await context.Guild.GetBanSafelyAsync(foundCase.UserId))?.User;
-            string username = caseUser?.Username ?? foundCase.UserName;
+            string username = caseUser?.ToString() ?? foundCase.UserName;
 
             EmbedBuilder embed;
             switch (foundCase.InfractionType)
