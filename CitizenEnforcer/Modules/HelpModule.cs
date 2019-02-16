@@ -61,7 +61,7 @@ namespace CitizenEnforcer.Modules
                 "- Developed by Hawx\n" +
                 "- Github: `https://github.com/Hawxy/CitizenEnforcer` \n" +
                 $"- Library: Discord.Net ({DiscordConfig.Version})\n" +
-                $"- Runtime: .NET Core 2.1 {RuntimeInformation.OSArchitecture}\n" +
+                $"- Runtime: .NET Core 2.2 {RuntimeInformation.OSArchitecture}\n" +
                 $"- Uptime: {GetUptime()}\n\n" +
 
                 $"{Format.Bold("Stats")}\n" +
