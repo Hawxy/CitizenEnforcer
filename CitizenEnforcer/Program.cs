@@ -99,7 +99,7 @@ namespace CitizenEnforcer
                         .AddSingleton(typeof(ICacheManagerConfiguration),
                             new CacheManager.Core.ConfigurationBuilder()
                                 .WithJsonSerializer()
-                                .WithMicrosoftMemoryCacheHandle()
+                                .WithMicrosoftMemoryCacheHandle("MemoryCache")
                                 .WithExpiration(ExpirationMode.Absolute, TimeSpan.FromMinutes(30))
                                 .DisablePerformanceCounters()
                                 .DisableStatistics()
