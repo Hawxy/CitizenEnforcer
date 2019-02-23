@@ -8,10 +8,11 @@ Features:
 - Warn/Kick/TempBan/Ban/Unban commands
 - Logging via detailed embeds (moderator, caseID, userID etc)
 - Lookup of previous moderation actions against a specified user
-- Automatic handling of Temporary bans
+- Automatic handling of temporary bans
 - Automatic logging of deleted and modified messages in requested channels
+- Automatic logging of user profile picture changes
 - Fallback logging of Bans & Unbans if done via Discord instead of a bot command
-- Lockdown and channel freeze functionality
+- Lockdown and channel freeze functionality (experimental)
 
 Libraries used:
 
