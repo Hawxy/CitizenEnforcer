@@ -179,12 +179,12 @@ namespace CitizenEnforcer.Common
             return manbuilder;
         }
 
-        public static EmbedBuilder GetUserLookupBuilder(IUser user, List<ModLog> cases, InfractionType infraction, bool isBanned)
+        public static EmbedBuilder GetUserLookupBuilder(string username, ulong userId, List<ModLog> cases, InfractionType infraction, bool isBanned)
         {
             var manbuilder =
                 new EmbedBuilder().WithColor(new Color(2, 136, 209))
-                    .WithCurrentTimestamp().WithTitle($"User Lookup - {user} - {user.Id}").WithDescription("---------------------");
-           
+                    .WithCurrentTimestamp().WithTitle($"User Lookup - {username} - {userId}").WithDescription("---------------------");
+
             manbuilder.AddField(z =>
             {
                 z.Name = "Currently Banned";
@@ -199,7 +199,7 @@ namespace CitizenEnforcer.Common
             });
 
             StringBuilder builder = new StringBuilder();
-            cases.ForEach(x=> builder.Append($"\n{x.ModLogCaseID} - {x.InfractionType}"));  
+            cases.ForEach(x => builder.Append($"\n{x.ModLogCaseID} - {x.InfractionType}"));
 
             manbuilder.AddField(z =>
             {

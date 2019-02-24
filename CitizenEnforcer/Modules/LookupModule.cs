@@ -18,7 +18,6 @@ along with this program.If not, see http://www.gnu.org/licenses/ */
 #endregion
 
 using System.Threading.Tasks;
-using CitizenEnforcer.Context;
 using CitizenEnforcer.Preconditions;
 using CitizenEnforcer.Services;
 using Discord;
@@ -33,7 +32,7 @@ namespace CitizenEnforcer.Modules
     [RequireInitialized(InitializedType.All)]
     public class LookupModule : ModuleBase<SocketCommandContext>
     {
-        public BotContext _botContext { get; set; }
+      
         public LookupService _lookupService { get; set; }
 
         [Command("user")]
@@ -47,6 +46,12 @@ namespace CitizenEnforcer.Modules
         [Priority(500)]
         [Summary("Find previous cases of a banned user")]
         public Task LookupUser(IBan bannedUser) => _lookupService.LookupUser(Context, bannedUser.User);
+
+        [Command("user")]
+        [Alias("u")]
+        [Priority(100)]
+        [Summary("Find previous cases of a given user ID")]
+        public Task LookupUser(ulong userId) => _lookupService.LookupUser(Context, userId);
 
         [Command("case")]
         [Alias("c")]

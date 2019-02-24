@@ -37,6 +37,22 @@ namespace CitizenEnforcer.Services
         {
             _botContext = botContext;
         }
+        //Use information from db if unable to resolve user.
+        //TODO refactor this at some point
+        public async Task LookupUser(SocketCommandContext context, ulong userID)
+        {
+            var foundLogs = await _botContext.ModLogs.AsNoTracking().Include(z => z.TempBan).Where(x => x.UserId == userID && x.GuildId == context.Guild.Id).ToListAsync();
+            if (foundLogs.Count == 0)
+            {
+                await context.Channel.SendMessageAsync("No previous moderator actions have been found for this user, nor are they a member of this guild. Are you sure the ID is correct?");
+                return;
+            }
+            var highestInfraction = foundLogs.Max(x => x.InfractionType);
+
+            var builder = ModeratorFormats.GetUserLookupBuilder(foundLogs.Last().UserName, userID, foundLogs, highestInfraction, false);
+
+            await context.Channel.SendMessageAsync("**WARN:** Unable to resolve user, falling back to last known information",embed: builder.Build());
+        }
 
         public async Task LookupUser(SocketCommandContext context, IUser user)
         {
@@ -50,7 +66,7 @@ namespace CitizenEnforcer.Services
             }
             var highestInfraction = foundLogs.Max(x => x.InfractionType);
 
-            var builder = ModeratorFormats.GetUserLookupBuilder(user, foundLogs, highestInfraction, currentlyBanned);
+            var builder = ModeratorFormats.GetUserLookupBuilder(user.ToString(), user.Id, foundLogs, highestInfraction, currentlyBanned);
 
             await context.Channel.SendMessageAsync(embed: builder.Build());
         }

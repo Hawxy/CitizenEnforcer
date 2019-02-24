@@ -67,7 +67,7 @@ namespace CitizenEnforcer.Modules
             #endregion
 
             #region Channels to log
-            await ReplyAsync("Mention all channels that the bot should log:");
+            await ReplyAsync("Mention all channels that the bot should monitor for logging purposes:");
             response = await _interactive.NextMessageAsync(Context, new MentionsChannel(), TimeSpan.FromSeconds(200));
             foreach (var cn in response.MentionedChannels)
             {
@@ -85,7 +85,7 @@ namespace CitizenEnforcer.Modules
 
             #region ModLog
 
-            await ReplyAsync("Mention the channel you want moderation logs to be stored in:");
+            await ReplyAsync("Mention the channel you want moderation logs (bans/kicks etc) to be stored in. Please make sure the bot has read/write access to this channel:");
             response = await _interactive.NextMessageAsync(Context, new MentionsChannel(), TimeSpan.FromSeconds(200));
             var modchannel = response.MentionedChannels.ElementAt(0);
 
@@ -98,7 +98,7 @@ namespace CitizenEnforcer.Modules
 
             #region PublicAnnounce
 
-            await ReplyAsync("Mention the channel you want public moderation messages to be sent to:");
+            await ReplyAsync("Mention the channel you want public moderation announcements to be sent to:");
             response = await _interactive.NextMessageAsync(Context, new MentionsChannel(), TimeSpan.FromSeconds(200));
             var publicchannel = response.MentionedChannels.ElementAt(0);
             guild.PublicAnnouceChannel = publicchannel.Id;
@@ -115,7 +115,7 @@ namespace CitizenEnforcer.Modules
         {
             var guild = await _botContext.Guilds.FirstOrDefaultAsync(x => x.GuildId == Context.Guild.Id);
             var field = typeof(Guild).GetProperty(changeField, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
-            if (field == null)
+            if (field == null || field.PropertyType != typeof(ulong))
             {
                 await ReplyAsync("Unable to find field");
                 return;
