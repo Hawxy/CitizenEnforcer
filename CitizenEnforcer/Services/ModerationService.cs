@@ -169,7 +169,7 @@ namespace CitizenEnforcer.Services
             await context.Message.DeleteAsync();
             if (type == BanType.Escalation)
             {
-                var foundtb = await _botContext.TempBans.Include(y => y.ModLog).Cacheable().FirstOrDefaultAsync(x => x.TempBanActive && x.ModLog.UserId == user.Id);
+                var foundtb = await _botContext.TempBans.Include(y => y.ModLog).FirstOrDefaultAsync(x => x.TempBanActive && x.ModLog.UserId == user.Id);
                 if (foundtb != null)
                 {
                     foundtb.TempBanActive = false;
