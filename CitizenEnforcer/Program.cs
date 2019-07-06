@@ -115,9 +115,6 @@ namespace CitizenEnforcer
                 host.Services.GetRequiredService<EditDeleteLogger>();
                 host.Services.GetRequiredService<UserUpdatedLogger>();
                 host.Services.GetRequiredService<TempBanTimer>();
-
-                EFServiceProvider.ApplicationServices = host.Services;
-
                 await host.RunReliablyAsync();
             }
         }

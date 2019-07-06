@@ -51,7 +51,10 @@ namespace CitizenEnforcer.Modules
             if (await _botContext.Guilds.AnyAsync(x => x.GuildId == Context.Guild.Id))
             {
                 await ReplyAsync("This guild is already registered, use the set commands to modify settings!");
+                return;
             }
+
+            await ReplyAsync("Each response will wait for a maximum of 200 seconds for you to answer. If an error/timeout occurs, you will need to start again.");
             await ReplyAsync("State the logging channel that guild events will be saved to (message edit/deletes + user edits):");
             var response = await _interactive.NextMessageAsync(Context, new MentionsChannel(), TimeSpan.FromSeconds(200));
             var channel = response.MentionedChannels.ElementAt(0);
@@ -61,8 +64,7 @@ namespace CitizenEnforcer.Modules
                 GuildId = Context.Guild.Id,
                 LoggingChannel = channel.Id
             };
-            await _botContext.Guilds.AddAsync(guild);
-            await _botContext.SaveChangesAsync();
+
             await ReplyAsync($"Message log channel set to {(channel as ITextChannel)?.Mention}");
             #endregion
 
@@ -78,7 +80,6 @@ namespace CitizenEnforcer.Modules
                 });
             }
             guild.IsEditLoggingEnabled = true;
-            await _botContext.SaveChangesAsync();
             await ReplyAsync("Channels registered!");
 
             #endregion
@@ -91,7 +92,6 @@ namespace CitizenEnforcer.Modules
 
             guild.ModerationChannel = modchannel.Id;
             guild.IsModerationEnabled = true;
-            await _botContext.SaveChangesAsync();
             await ReplyAsync($"Moderation channel set to {(modchannel as ITextChannel)?.Mention}");
 
             #endregion
@@ -103,8 +103,9 @@ namespace CitizenEnforcer.Modules
             var publicchannel = response.MentionedChannels.ElementAt(0);
             guild.PublicAnnouceChannel = publicchannel.Id;
             guild.IsPublicAnnounceEnabled = true;
+            await _botContext.Guilds.AddAsync(guild);
             await _botContext.SaveChangesAsync();
-            await ReplyAsync($"Announce channel set to {(publicchannel as ITextChannel)?.Mention}, Setup complete!");
+            await ReplyAsync($"Announce channel set to {(publicchannel as ITextChannel)?.Mention}, setup complete!");
             #endregion
         }
 
