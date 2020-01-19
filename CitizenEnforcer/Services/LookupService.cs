@@ -1,6 +1,6 @@
 ﻿#region License
 /*CitizenEnforcer - Moderation and logging bot
-Copyright(C) 2018 Hawx
+Copyright(C) 2018-2020 Hawx
 https://github.com/Hawxy/CitizenEnforcer
 
 This program is free software: you can redistribute it and/or modify
@@ -87,24 +87,14 @@ namespace CitizenEnforcer.Services
             IUser caseUser = context.Client.GetUser(foundCase.UserId) ?? (await context.Guild.GetBanSafelyAsync(foundCase.UserId))?.User;
             string username = caseUser?.ToString() ?? foundCase.UserName;
 
-            EmbedBuilder embed;
-            switch (foundCase.InfractionType)
+            var embed = foundCase.InfractionType switch
             {
-                case InfractionType.Warning:
-                    embed = ModeratorFormats.GetWarnBuilder(username, foundCase.UserId, modUser, caseID, foundCase.Reason, foundCase.DateTime);
-                    break;
-                case InfractionType.Kick:
-                    embed = ModeratorFormats.GetKickBuilder(username, foundCase.UserId, modUser, caseID, foundCase.Reason, foundCase.DateTime);
-                    break;
-                case InfractionType.TempBan:
-                    embed = ModeratorFormats.GetTempBanBuilder(username, foundCase.UserId, modUser, caseID, foundCase.Reason, foundCase.DateTime, foundCase.TempBan.ExpireDate);
-                    break;
-                case InfractionType.Ban:
-                    embed = ModeratorFormats.GetBanBuilder(username, foundCase.UserId, modUser, caseID, foundCase.Reason, foundCase.DateTime);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+                InfractionType.Warning => ModeratorFormats.GetWarnBuilder(username, foundCase.UserId, modUser, caseID, foundCase.Reason, foundCase.DateTime),
+                InfractionType.Kick => ModeratorFormats.GetKickBuilder(username, foundCase.UserId, modUser, caseID, foundCase.Reason, foundCase.DateTime),
+                InfractionType.TempBan => ModeratorFormats.GetTempBanBuilder(username, foundCase.UserId, modUser, caseID, foundCase.Reason, foundCase.DateTime, foundCase.TempBan.ExpireDate),
+                InfractionType.Ban => ModeratorFormats.GetBanBuilder(username, foundCase.UserId, modUser, caseID, foundCase.Reason, foundCase.DateTime),
+                _ => throw new ArgumentOutOfRangeException()
+            };
 
             await context.Channel.SendMessageAsync(embed: embed.Build());
         }

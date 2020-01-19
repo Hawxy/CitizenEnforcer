@@ -21,26 +21,26 @@ using System;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
-using Discord.WebSocket;
 
-namespace CitizenEnforcer.Preconditions
+namespace CitizenEnforcer.TypeReaders
 {
-    public class ErrorPreventAttribute : ParameterPreconditionAttribute
+    //Handles users that have left the guild
+    public class ExtendedUserTypeReader<T> : UserTypeReader<T> where T : class, IUser
     {
-        public override async Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, ParameterInfo parameter, object value, IServiceProvider services)
+        public override async Task<TypeReaderResult> ReadAsync(ICommandContext context, string input, IServiceProvider services)
         {
-            if (value is IUser user && user.Id != context.User.Id)
-            {
-                var bot = await context.Guild.GetCurrentUserAsync();
+            var res = await base.ReadAsync(context, input, services);
+            if (res.IsSuccess) return res;
 
-                if (bot is SocketGuildUser socketBot && user is SocketGuildUser socketUser)
-                    if (socketUser.Hierarchy > socketBot.Hierarchy)
-                        return PreconditionResult.FromError("Cannot perform action on user with higher role than myself");
-                
-                return PreconditionResult.FromSuccess();
+            if (ulong.TryParse(input, out ulong result) && context is SocketCommandContext ctx)
+            {
+                var user = await ctx.Client.Rest.GetUserAsync(result);
+
+                if (user != null)
+                    return TypeReaderResult.FromSuccess(user);
             }
-               
-            return PreconditionResult.FromError("You can't use this command on yourself!");
+
+            return TypeReaderResult.FromError(CommandError.ObjectNotFound,  "Unable to find user");
         }
     }
 }

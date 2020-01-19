@@ -1,6 +1,6 @@
 ﻿#region License
 /*CitizenEnforcer - Moderation and logging bot
-Copyright(C) 2018 Hawx
+Copyright(C) 2018-2020 Hawx
 https://github.com/Hawxy/CitizenEnforcer
 
 This program is free software: you can redistribute it and/or modify
@@ -23,6 +23,7 @@ using CitizenEnforcer.Common;
 using CitizenEnforcer.Context;
 using CitizenEnforcer.Preconditions;
 using CitizenEnforcer.Services;
+using CitizenEnforcer.TypeReaders;
 using Discord;
 using Discord.Addons.Interactive;
 using Discord.Commands;
@@ -59,22 +60,14 @@ namespace CitizenEnforcer.Modules
         [Command("softban")]
         [Alias("sb")]
         [RequireBotPermission(GuildPermission.BanMembers)]
-        [Summary("Bans a user without deleting message history. Supports an optional specified reason")]
-        public Task SoftBan([ErrorPrevent]IGuildUser user, [Remainder] string reason = null) => _moderationService.BanUser(Context, user, ModerationService.BanType.SoftBan, Context.Message.ResolveAtString(reason));
+        [Summary("Bans a user without deleting message history. Supports escalation of a temp-ban and offline bans. Supports an optional specified reason")]
+        public Task SoftBan([ErrorPrevent][OverrideTypeReader(typeof(ExtendedUserTypeReader<IUser>))]IUser user, [Remainder] string reason = null) => _moderationService.BanUser(Context, user, ModerationService.BanType.SoftBan, Context.Message.ResolveAtString(reason));
 
-        [Priority(1000)]
         [Command("ban")]
         [Alias("b")]
         [RequireBotPermission(GuildPermission.BanMembers)]
-        [Summary("Bans and deletes recent message history. Supports an optional specified reason")]
-        public Task Ban([ErrorPrevent]IGuildUser user, [Remainder] string reason = null) => _moderationService.BanUser(Context, user, ModerationService.BanType.HardBan, Context.Message.ResolveAtString(reason));
-
-        [Priority(500)]
-        [Command("ban")]
-        [Alias("b")]
-        [RequireBotPermission(GuildPermission.BanMembers)]
-        [Summary("Increases an existing temp-ban to a permanent ban. Supports an optional specified reason")]
-        public Task Ban(IBan bannedUser, [Remainder] string reason = null) => _moderationService.BanUser(Context, bannedUser.User, ModerationService.BanType.Escalation, Context.Message.ResolveAtString(reason));
+        [Summary("Bans and deletes recent message history. Supports escalation of a temp-ban and offline bans. Supports an optional specified reason")]
+        public Task Ban([ErrorPrevent][OverrideTypeReader(typeof(ExtendedUserTypeReader<IUser>))]IUser user, [Remainder] string reason = null) => _moderationService.BanUser(Context, user, ModerationService.BanType.HardBan, Context.Message.ResolveAtString(reason));
 
         [Command("unban")]
         [Alias("ub")]

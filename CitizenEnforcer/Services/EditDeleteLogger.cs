@@ -1,6 +1,6 @@
 ﻿#region License
 /*CitizenEnforcer - Moderation and logging bot
-Copyright(C) 2018 Hawx
+Copyright(C) 2018-2020 Hawx
 https://github.com/Hawxy/CitizenEnforcer
 
 This program is free software: you can redistribute it and/or modify
@@ -48,7 +48,7 @@ namespace CitizenEnforcer.Services
             //if the message isn't cached, the author isn't a user, its a bot command, or the user/channel is in the ban cache then don't do anything
             if (message == null 
                 || message.Source != MessageSource.User 
-                || message.Content.StartsWith(_configuration["Prefix"]) 
+                || message.Content.StartsWith(_configuration["Prefix"])
                 || _banCache.Get(message.Author.Id) != null 
                 || _banCache.Get(channel.Id) != null)
                 return;

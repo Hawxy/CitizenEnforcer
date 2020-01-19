@@ -1,6 +1,6 @@
 ﻿#region License
 /*CitizenEnforcer - Moderation and logging bot
-Copyright(C) 2018 Hawx
+Copyright(C) 2018-2020 Hawx
 https://github.com/Hawxy/CitizenEnforcer
 
 This program is free software: you can redistribute it and/or modify

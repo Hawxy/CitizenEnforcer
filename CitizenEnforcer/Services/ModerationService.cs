@@ -1,6 +1,6 @@
 ﻿#region License
 /*CitizenEnforcer - Moderation and logging bot
-Copyright(C) 2018 Hawx
+Copyright(C) 2018-2020 Hawx
 https://github.com/Hawxy/CitizenEnforcer
 
 This program is free software: you can redistribute it and/or modify
@@ -81,6 +81,10 @@ namespace CitizenEnforcer.Services
             //if the user is cached then reject the unban event
             if (_banCache.TryGetValue(bannedUser.Id, out CacheModel value) && value.CacheType == CacheType.UnbanReject)
                 return;
+
+            if (!await _botContext.Guilds.Cacheable().AnyAsync(x => x.GuildId == guild.Id && x.IsModerationEnabled))
+                return;
+
             var foundtb = await _botContext.TempBans.Include(x => x.ModLog).Cacheable().FirstOrDefaultAsync(x => x.ModLog.UserId == bannedUser.Id && x.TempBanActive);
             if (foundtb != null)
             {
@@ -164,25 +168,29 @@ namespace CitizenEnforcer.Services
 
             await SendMessageToAnnounce(context.Guild, $"***{user} has been temporarily banned from the server***");
         }
+
+        //TODO this handles too many different concerns. Clean it up at some point.
         public async Task BanUser(SocketCommandContext context, IUser user, BanType type, string reason)
         {
             await context.Message.DeleteAsync();
-            if (type == BanType.Escalation)
+
+            var foundtb = await _botContext.TempBans.Include(y => y.ModLog).FirstOrDefaultAsync(x => x.TempBanActive && x.ModLog.UserId == user.Id);
+            //If the user is TB'd then they're already banned and we don't need to do anything.
+            if (foundtb != null)
             {
-                var foundtb = await _botContext.TempBans.Include(y => y.ModLog).FirstOrDefaultAsync(x => x.TempBanActive && x.ModLog.UserId == user.Id);
-                if (foundtb != null)
-                {
-                    foundtb.TempBanActive = false;
-                    await _botContext.SaveChangesAsync();
-                }
-                else
-                {
-                    await context.Channel.SendMessageAsync("No temp-ban on record to escalate");
-                    return;
-                }
+                foundtb.TempBanActive = false;
+                await _botContext.SaveChangesAsync();
             }
             else
             {
+                //Ensure we don't double ban the user.
+                var alreadyBanned = await context.Guild.GetBanSafelyAsync(user.Id);
+                if (alreadyBanned != null)
+                {
+                    await context.Channel.SendMessageAsync("User already banned!");
+                    return;
+                }
+
                 _banCache.Set(user.Id, new CacheModel(context.Guild.Id), TimeSpan.FromSeconds(5));
                 await SendMessageToUser(user, $"You have been permanently banned from the guild ``{context.Guild.Name}`` {(string.IsNullOrWhiteSpace(reason) ? string.Empty : $"for: ``{reason}``")}");
                 if (type == BanType.HardBan)
@@ -278,8 +286,7 @@ namespace CitizenEnforcer.Services
         public enum BanType
         {
             HardBan,
-            SoftBan,
-            Escalation
+            SoftBan
         }
     }
 }

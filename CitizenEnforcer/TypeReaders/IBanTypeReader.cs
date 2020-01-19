@@ -1,6 +1,6 @@
 ﻿#region License
 /*CitizenEnforcer - Moderation and logging bot
-Copyright(C) 2018 Hawx
+Copyright(C) 2018-2020 Hawx
 https://github.com/Hawxy/CitizenEnforcer
 
 This program is free software: you can redistribute it and/or modify
@@ -18,7 +18,6 @@ along with this program.If not, see http://www.gnu.org/licenses/ */
 #endregion
 
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using CitizenEnforcer.Common;
 using Discord.Commands;
@@ -35,15 +34,8 @@ namespace CitizenEnforcer.TypeReaders
                 if (ban != null)
                     return TypeReaderResult.FromSuccess(ban);
             }
-            else
-            {
-                var bans = await context.Guild.GetBansAsync();
-                var banuser = bans.FirstOrDefault(x => x.User.Username == input || x.User.ToString().Equals(input));
-                if(banuser != null)
-                    return TypeReaderResult.FromSuccess(banuser);
-            }
 
-            return TypeReaderResult.FromError(CommandError.ParseFailed, "Unable to find banned user");
+            return TypeReaderResult.FromError(CommandError.ObjectNotFound, "Unable to find banned user");
         }
     }
 }
