@@ -39,8 +39,14 @@ namespace CitizenEnforcer.Modules
     [RequireUserPermission(GuildPermission.KickMembers)]
     public class SetupModule : ModuleBase<SocketCommandContext>
     {
-        public InteractiveService _interactive { get; set; }
-        public BotContext _botContext { get; set; }
+        private readonly InteractiveService _interactive;
+        private readonly BotContext _botContext;
+
+        public SetupModule(InteractiveService interactive, BotContext botContext)
+        {
+            _interactive = interactive;
+            _botContext = botContext;
+        }
 
         //I could probably add some more error handling here, but I don't expect the bot to be used outside of a single server
         [Command("initialize")]
@@ -48,7 +54,7 @@ namespace CitizenEnforcer.Modules
         {
             #region Setting up guild text log channel
 
-            if (await _botContext.Guilds.AnyAsync(x => x.GuildId == Context.Guild.Id))
+            if (await _botContext.Guilds.AsQueryable().AnyAsync(x => x.GuildId == Context.Guild.Id))
             {
                 await ReplyAsync("This guild is already registered, use the set commands to modify settings!");
                 return;
@@ -114,7 +120,7 @@ namespace CitizenEnforcer.Modules
         [Summary("Allows you to set LoggingChannel, ModerationChannel and PublicAnnounceChannel")]
         public async Task ChangeChannel(string changeField, ITextChannel channel)
         {
-            var guild = await _botContext.Guilds.FirstOrDefaultAsync(x => x.GuildId == Context.Guild.Id);
+            var guild = await _botContext.Guilds.AsQueryable().FirstOrDefaultAsync(x => x.GuildId == Context.Guild.Id);
             var field = typeof(Guild).GetProperty(changeField, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
             if (field == null || field.PropertyType != typeof(ulong))
             {
@@ -132,7 +138,7 @@ namespace CitizenEnforcer.Modules
         [Summary("Allows you to set IsEditLoggingEnabled, IsModerationEnabled and IsPublicAnnounceEnabled")]
         public async Task ChangeBool(string changeField, bool modify)
         {
-            var guild = await _botContext.Guilds.FirstOrDefaultAsync(x => x.GuildId == Context.Guild.Id);
+            var guild = await _botContext.Guilds.AsQueryable().FirstOrDefaultAsync(x => x.GuildId == Context.Guild.Id);
             var field = typeof(Guild).GetProperty(changeField, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
             if (field == null || field.PropertyType != typeof(bool))
             {

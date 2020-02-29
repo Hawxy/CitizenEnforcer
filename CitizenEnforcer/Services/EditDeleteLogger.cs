@@ -18,9 +18,11 @@ along with this program.If not, see http://www.gnu.org/licenses/ */
 #endregion
 
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using CitizenEnforcer.Context;
 using Discord;
+using Discord.Addons.Hosting;
 using Discord.WebSocket;
 using EFSecondLevelCache.Core;
 using Microsoft.EntityFrameworkCore;
@@ -29,19 +31,27 @@ using Microsoft.Extensions.Configuration;
 
 namespace CitizenEnforcer.Services
 {
-    public class EditDeleteLogger
+    public class EditDeleteLogger : InitializedService
     {
         private readonly BotContext _botContext;
         private readonly IConfiguration _configuration;
+        private readonly DiscordSocketClient _client;
         private readonly IMemoryCache _banCache;
         public EditDeleteLogger(BotContext botContext, IConfiguration configuration, DiscordSocketClient client, IMemoryCache memoryCache)
         {
             _botContext = botContext;
             _configuration = configuration;
+            _client = client;
             _banCache = memoryCache;
-            client.MessageDeleted += (cacheable, channel) => GenericMessageEvent(cacheable, channel);
-            client.MessageUpdated += (cacheable, message, channel) => GenericMessageEvent(cacheable, channel, message);
         }
+
+        public override Task InitializeAsync(CancellationToken cancellationToken)
+        {
+            _client.MessageDeleted += (cacheable, channel) => GenericMessageEvent(cacheable, channel);
+            _client.MessageUpdated += (cacheable, message, channel) => GenericMessageEvent(cacheable, channel, message);
+            return Task.CompletedTask;
+        }
+
         private async Task GenericMessageEvent(Cacheable<IMessage, ulong> cachedMessage, ISocketMessageChannel channel, SocketMessage currentMessage = null)
         {
             var message = cachedMessage.Value;
@@ -56,7 +66,7 @@ namespace CitizenEnforcer.Services
             if (channel is SocketGuildChannel guildchannel)
             {
                 //verify the guild is registered and has logging enabled
-                var guild = await _botContext.Guilds.Include(x=> x.RegisteredChannels).AsNoTracking().Cacheable().FirstOrDefaultAsync(x => x.GuildId == guildchannel.Guild.Id && x.IsEditLoggingEnabled);
+                var guild = await _botContext.Guilds.Include(x=> x.RegisteredChannels).AsNoTracking().Cacheable().AsQueryable().FirstOrDefaultAsync(x => x.GuildId == guildchannel.Guild.Id && x.IsEditLoggingEnabled);
 
                 //verify the channel is set to be logged
                 // ReSharper disable once SimplifyLinqExpression

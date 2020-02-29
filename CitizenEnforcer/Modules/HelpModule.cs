@@ -34,10 +34,17 @@ namespace CitizenEnforcer.Modules
 {
     public class HelpModule : ModuleBase<SocketCommandContext>
     {
-        public Helper _help { get; set; }
-        public InteractiveService _interactiveService { get; set; }
+        private readonly Helper _help;
+        private readonly InteractiveService _interactiveService;
+        private readonly IHost _host;
 
-        public IHost _host { get; set; }
+        public HelpModule(Helper help, InteractiveService interactiveService, IHost host)
+        {
+            _help = help;
+            _interactiveService = interactiveService;
+            _host = host;
+        }
+
 
         [Command("help")]
         [Summary("Displays list of available commands")]
@@ -58,10 +65,10 @@ namespace CitizenEnforcer.Modules
         {
             await ReplyAsync(
                 $"{Format.Bold("Info")}\n" +
-                "- Developed by Hawx\n" +
+                "- Developed by Hawx#0001\n" +
                 "- Github: `https://github.com/Hawxy/CitizenEnforcer` \n" +
                 $"- Library: Discord.Net ({DiscordConfig.Version})\n" +
-                $"- Runtime: .NET Core 2.2 {RuntimeInformation.OSArchitecture}\n" +
+                $"- Runtime: {RuntimeInformation.FrameworkDescription} {RuntimeInformation.OSArchitecture}\n" +
                 $"- Uptime: {GetUptime()}\n\n" +
 
                 $"{Format.Bold("Stats")}\n" +

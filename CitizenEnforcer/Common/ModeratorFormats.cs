@@ -204,7 +204,7 @@ namespace CitizenEnforcer.Common
             manbuilder.AddField(z =>
             {
                 z.Name = "Related Case IDs:";
-                z.Value = $"```{builder.ToString()}```";
+                z.Value = $"```{builder}```";
                 z.IsInline = false;
             });
 

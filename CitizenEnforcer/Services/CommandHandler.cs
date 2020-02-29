@@ -19,16 +19,20 @@ along with this program.If not, see http://www.gnu.org/licenses/ */
 
 using System;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using CitizenEnforcer.TypeReaders;
 using Discord;
+using Discord.Addons.Hosting;
 using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
+using Sentry;
+using Sentry.Protocol;
 
 namespace CitizenEnforcer.Services
 {
-    public class CommandHandler
+    public class CommandHandler : InitializedService
     {
         private readonly IServiceProvider _provider;
         private readonly DiscordSocketClient _client;
@@ -47,7 +51,7 @@ namespace CitizenEnforcer.Services
             _commandService.CommandExecuted += CommandExecutedAsync;
         }
 
-        public async Task InitializeAsync()
+        public override async Task InitializeAsync(CancellationToken cancellationToken)
         {
             _commandService.AddTypeReader<IBan>(new IBanTypeReader());
             await _commandService.AddModulesAsync(Assembly.GetEntryAssembly(), _provider);
@@ -61,8 +65,19 @@ namespace CitizenEnforcer.Services
             int argPos = 0;
             if (!message.HasStringPrefix(_config["Prefix"], ref argPos) && !message.HasMentionPrefix(_client.CurrentUser, ref argPos)) return;
 
-            var context = new SocketCommandContext(_client, message);
-            await _commandService.ExecuteAsync(context, argPos, _provider);
+            using (SentrySdk.PushScope())
+            {
+                var context = new SocketCommandContext(_client, message);
+                SentrySdk.ConfigureScope(s =>
+                {
+                    s.User = new User { Id = message.Author.Id.ToString(), Username = message.Author.ToString() };
+                    s.SetTag("Guild", context.Guild?.Name ?? "Private Message");
+                    s.SetTag("Channel", context.Channel?.Name ?? "N/A");
+                });
+
+                await _commandService.ExecuteAsync(context, argPos, _provider);
+            }
+           
         }
         public async Task CommandExecutedAsync(Optional<CommandInfo> command, ICommandContext context, IResult result)
         {
@@ -85,7 +100,7 @@ namespace CitizenEnforcer.Services
                     await context.Channel.SendMessageAsync(result.ErrorReason);
                     break;
                 case CommandError.Exception:
-                    await context.Channel.SendMessageAsync("Unable to comply, an internal exception was detected.");
+                    await context.Channel.SendMessageAsync($"An error occurred whilst processing this command. This has been reported automatically. (ID: {SentrySdk.LastEventId})");
                     break;
                 case CommandError.Unsuccessful:
                     break;

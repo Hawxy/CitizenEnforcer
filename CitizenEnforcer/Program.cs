@@ -18,7 +18,6 @@ along with this program.If not, see http://www.gnu.org/licenses/ */
 #endregion
 
 using System;
-using System.IO;
 using System.Threading.Tasks;
 using CacheManager.Core;
 using CitizenEnforcer.Common;
@@ -36,6 +35,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Sentry;
 using Serilog;
 using Serilog.Events;
 
@@ -45,31 +45,40 @@ namespace CitizenEnforcer
     {
         public static async Task Main()
         {
-            Log.Logger = new LoggerConfiguration()
-                .WriteTo.Console()
-                .MinimumLevel.Verbose()
-                .MinimumLevel.Override("Microsoft", LogEventLevel.Error)
-                .CreateLogger();
-
             string dbPassword = GetPassword(); 
 
             var builder = new HostBuilder()
                 .ConfigureAppConfiguration(x =>
                 {
-                    x.SetBasePath(Directory.GetCurrentDirectory())
-                        .AddJsonFile("config/configuration.json");
+                    x.AddJsonFile("config/configuration.json");
                 })
-                .UseSerilog()
-                .ConfigureDiscordClient<DiscordSocketClient>((context, discordBuilder) =>
+                .UseSerilog((context, config) =>
+                {
+                    config
+                        .WriteTo.Console()
+                        .MinimumLevel.Verbose()
+                        .MinimumLevel.Override("Microsoft", LogEventLevel.Error);
+
+                    if (!string.IsNullOrEmpty(context.Configuration["Sentry"]))
+                        config.WriteTo.Sentry(o =>
+                        {
+                            o.Dsn = new Dsn(context.Configuration["Sentry"]);
+                            o.MinimumBreadcrumbLevel = LogEventLevel.Debug;
+                            o.MinimumEventLevel = LogEventLevel.Error;
+                        });
+
+                })
+                .ConfigureDiscordHost<DiscordSocketClient>((context, discordBuilder) =>
                 {
                     var config = new DiscordSocketConfig
                     {
-                        LogLevel = LogSeverity.Verbose,
+                        LogLevel = LogSeverity.Info,
                         AlwaysDownloadUsers = true,
                         MessageCacheSize = 200
                     };
 
-                    discordBuilder.UseDiscordConfiguration(config);
+                    discordBuilder.SetDiscordConfiguration(config);
+                    discordBuilder.SetToken(context.Configuration["Token"]);
                 })
                 .UseCommandService((context, config) =>
                 {
@@ -78,13 +87,13 @@ namespace CitizenEnforcer
                 })
                 .ConfigureServices((context, services) =>
                 {
-                    services.AddSingleton<CommandHandler>()
-                        .AddSingleton<EditDeleteLogger>()
-                        .AddSingleton<UserUpdatedLogger>()
+                    services.AddHostedService<CommandHandler>()
+                        .AddHostedService<EditDeleteLogger>()
+                        .AddHostedService<UserUpdatedLogger>()
+                        .AddHostedService<TempBanTimer>()
                         .AddSingleton<InteractiveService>()
                         .AddSingleton<LookupService>()
                         .AddSingleton<ModerationService>()
-                        .AddSingleton<TempBanTimer>()
                         .AddSingleton<Helper>()
                         .AddDbContext<BotContext>(options =>
                         {
@@ -111,10 +120,6 @@ namespace CitizenEnforcer
             var host = builder.Build();
             using (host)
             {
-                await host.Services.GetRequiredService<CommandHandler>().InitializeAsync();
-                host.Services.GetRequiredService<EditDeleteLogger>();
-                host.Services.GetRequiredService<UserUpdatedLogger>();
-                host.Services.GetRequiredService<TempBanTimer>();
                 await host.RunReliablyAsync();
             }
         }
@@ -135,7 +140,7 @@ namespace CitizenEnforcer
                 {
                     if (key.Key == ConsoleKey.Backspace && pass.Length > 0)
                     {
-                        pass = pass.Substring(0, pass.Length - 1);
+                        pass = pass[..^1];
                         Console.Write("\b \b");
                     }
                 }

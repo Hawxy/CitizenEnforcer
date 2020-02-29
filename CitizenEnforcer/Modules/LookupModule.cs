@@ -32,8 +32,12 @@ namespace CitizenEnforcer.Modules
     [RequireInitialized(InitializedType.All)]
     public class LookupModule : ModuleBase<SocketCommandContext>
     {
-      
-        public LookupService _lookupService { get; set; }
+        private readonly LookupService _lookupService;
+
+        public LookupModule(LookupService lookupService)
+        {
+            _lookupService = lookupService;
+        }
 
         [Command("user")]
         [Alias("u")]

@@ -21,34 +21,52 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using CitizenEnforcer.Common;
 using CitizenEnforcer.Context;
 using CitizenEnforcer.Models;
 using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace CitizenEnforcer.Services
 {
-    public class TempBanTimer
+    public class TempBanTimer : IHostedService, IAsyncDisposable
     {
-        private readonly Timer _timer;
+        private Timer _timer;
         private readonly BotContext _botContext;
         private readonly DiscordSocketClient _client;
         private readonly ModerationService _moderationService;
         private readonly IMemoryCache _banCache;
-        public TempBanTimer(BotContext botContext, DiscordSocketClient client, ModerationService moderationService, IMemoryCache banCache)
+        private readonly ILogger<TempBanTimer> _logger;
+
+        public TempBanTimer(BotContext botContext, DiscordSocketClient client, ModerationService moderationService, IMemoryCache banCache, ILogger<TempBanTimer> logger)
         {
             _botContext = botContext;
             _client = client;
             _moderationService = moderationService;
             _banCache = banCache;
-            _timer = new Timer(_ => CheckBan(), null, TimeSpan.FromSeconds(30), TimeSpan.FromMinutes(20)); 
+            _logger = logger;
+        }
+
+        public Task StartAsync(CancellationToken cancellationToken)
+        {
+            _timer = new Timer(_ => CheckBan(), null, TimeSpan.FromSeconds(30), TimeSpan.FromMinutes(20));
+            return Task.CompletedTask;
+        }
+
+        public Task StopAsync(CancellationToken cancellationToken)
+        {
+            _timer?.Change(Timeout.Infinite, 0);
+            return Task.CompletedTask;
         }
 
         private async void CheckBan()
         {
-            List<TempBan> Unbans = await _botContext.TempBans.Include(y=> y.ModLog).Where(x => x.TempBanActive && DateTimeOffset.UtcNow > x.ExpireDate).ToListAsync();
+            _logger.LogDebug("Checking for expired tempbans....");
+            List<TempBan> Unbans = await _botContext.TempBans.Include(y=> y.ModLog).AsAsyncEnumerable().Where(x => x.TempBanActive && DateTimeOffset.UtcNow > x.ExpireDate).ToListAsync();
             foreach (TempBan ban in Unbans)
             {
                 //find and unban
@@ -74,6 +92,11 @@ namespace CitizenEnforcer.Services
 
             }
             await _botContext.SaveChangesAsync();
+        }
+
+        public ValueTask DisposeAsync()
+        {
+            return _timer.DisposeAsync();
         }
     }
 }

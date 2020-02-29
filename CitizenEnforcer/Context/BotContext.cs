@@ -37,6 +37,15 @@ namespace CitizenEnforcer.Context
         public DbSet<ModLog> ModLogs { get; set; }
         public DbSet<TempBan> TempBans { get; set; }
 
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<ModLog>()
+                .HasOne(m => m.TempBan)
+                .WithOne(i => i.ModLog)
+                .HasForeignKey<TempBan>(p => p.ModLogDBId);
+        }
+
         public override int SaveChanges()
         {
             ChangeTracker.DetectChanges();

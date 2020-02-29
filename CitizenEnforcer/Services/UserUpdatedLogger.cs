@@ -18,16 +18,18 @@ along with this program.If not, see http://www.gnu.org/licenses/ */
 #endregion
 
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using CitizenEnforcer.Context;
 using CitizenEnforcer.Models;
 using Discord;
+using Discord.Addons.Hosting;
 using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
 
 namespace CitizenEnforcer.Services
 {
-    public class UserUpdatedLogger
+    public class UserUpdatedLogger : InitializedService
     {
         private readonly BotContext _botContext;
         private readonly DiscordSocketClient _client;
@@ -35,7 +37,12 @@ namespace CitizenEnforcer.Services
         {
             _botContext = botContext;
             _client = client;
-            client.UserUpdated += HandleUserUpdated;
+        }
+
+        public override Task InitializeAsync(CancellationToken cancellationToken)
+        {
+            _client.UserUpdated += HandleUserUpdated;
+            return Task.CompletedTask;
         }
 
         private async Task HandleUserUpdated(SocketUser before, SocketUser after)

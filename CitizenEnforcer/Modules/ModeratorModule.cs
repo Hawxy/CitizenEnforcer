@@ -36,9 +36,16 @@ namespace CitizenEnforcer.Modules
     [RequireInitialized(InitializedType.All)]
     public class ModeratorModule : ModuleBase<SocketCommandContext>
     {
-        public BotContext _botContext { get; set; }
-        public InteractiveService _interactiveService { get; set; }
-        public ModerationService _moderationService { get; set; }
+        public BotContext _botContext;
+        public InteractiveService _interactiveService;
+        public ModerationService _moderationService;
+
+        public ModeratorModule(BotContext botContext, InteractiveService interactiveService, ModerationService moderationService)
+        {
+            _botContext = botContext;
+            _interactiveService = interactiveService;
+            _moderationService = moderationService;
+        }
 
         [Command("warn")]
         [Alias("w")]

@@ -37,9 +37,16 @@ namespace CitizenEnforcer.Modules
     [RequireBotPermission(GuildPermission.ManageRoles | GuildPermission.ManageChannels | GuildPermission.SendMessages)]
     public class SecurityModule : ModuleBase<SocketCommandContext>
     {
-        public InteractiveService _interactive { get; set; }
-        public IMemoryCache _banCache { get; set; }
-        public ModerationService _moderationService { get; set; }
+        public InteractiveService _interactive;
+        public IMemoryCache _banCache;
+        public ModerationService _moderationService;
+
+        public SecurityModule(InteractiveService interactive, IMemoryCache banCache, ModerationService moderationService)
+        {
+            _interactive = interactive;
+            _banCache = banCache;
+            _moderationService = moderationService;
+        }
 
         [Command("lockdown")]
         [Alias("panic")]

@@ -54,7 +54,7 @@ namespace CitizenEnforcer.Services
 
             _banCache.Set(bannedUser.Id, new CacheModel(guild.Id), TimeSpan.FromSeconds(5));
 
-            if (!await _botContext.Guilds.Cacheable().AnyAsync(x => x.GuildId == guild.Id && x.IsModerationEnabled))
+            if (!await _botContext.Guilds.Cacheable().AsQueryable().AnyAsync(x => x.GuildId == guild.Id && x.IsModerationEnabled))
                 return;
 
             var caseID = await GenerateNewCaseID(guild.Id);
@@ -82,10 +82,10 @@ namespace CitizenEnforcer.Services
             if (_banCache.TryGetValue(bannedUser.Id, out CacheModel value) && value.CacheType == CacheType.UnbanReject)
                 return;
 
-            if (!await _botContext.Guilds.Cacheable().AnyAsync(x => x.GuildId == guild.Id && x.IsModerationEnabled))
+            if (!await _botContext.Guilds.Cacheable().AsQueryable().AnyAsync(x => x.GuildId == guild.Id && x.IsModerationEnabled))
                 return;
 
-            var foundtb = await _botContext.TempBans.Include(x => x.ModLog).Cacheable().FirstOrDefaultAsync(x => x.ModLog.UserId == bannedUser.Id && x.TempBanActive);
+            var foundtb = await _botContext.TempBans.Include(x => x.ModLog).Cacheable().AsQueryable().FirstOrDefaultAsync(x => x.ModLog.UserId == bannedUser.Id && x.TempBanActive);
             if (foundtb != null)
             {
                 foundtb.TempBanActive = false;
@@ -217,7 +217,7 @@ namespace CitizenEnforcer.Services
         public async Task UnbanUser(SocketCommandContext context, IUser bannedUser)
         {
             await context.Message.DeleteAsync();
-            var foundtb = await _botContext.TempBans.Include(x => x.ModLog).Cacheable().FirstOrDefaultAsync(x => x.ModLog.UserId == bannedUser.Id && x.TempBanActive);
+            var foundtb = await _botContext.TempBans.Include(x => x.ModLog).Cacheable().AsQueryable().FirstOrDefaultAsync(x => x.ModLog.UserId == bannedUser.Id && x.TempBanActive);
             if (foundtb != null)
             {
                 foundtb.TempBanActive = false;
@@ -243,11 +243,10 @@ namespace CitizenEnforcer.Services
             //public announce disabled
             if (foundGuild == null)
                 return;
+
             var channel = guild.GetTextChannel(foundGuild.PublicAnnouceChannel);
-            if (embed == null)
-                await channel.SendMessageAsync(message);
-            else
-                await channel.SendMessageAsync(message, embed: embed.Build());
+
+            await channel.SendMessageAsync(message, embed: embed?.Build());
         }
 
         public async Task SendMessageToUser(IUser user, string message)
@@ -263,7 +262,7 @@ namespace CitizenEnforcer.Services
 
         private async Task<ulong> GenerateNewCaseID(ulong GuildID)
         {
-            var logEntries = await _botContext.ModLogs.AsNoTracking().LastOrDefaultAsync(x => x.GuildId == GuildID);
+            var logEntries = await _botContext.ModLogs.AsNoTracking().AsAsyncEnumerable().LastOrDefaultAsync(x => x.GuildId == GuildID);
             return logEntries?.ModLogCaseID + 1 ?? 1;
         }
 
