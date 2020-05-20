@@ -45,7 +45,6 @@ namespace CitizenEnforcer.Modules
             _host = host;
         }
 
-
         [Command("help")]
         [Summary("Displays list of available commands")]
         [RequireContext(ContextType.Guild)]
@@ -86,7 +85,7 @@ namespace CitizenEnforcer.Modules
         public async Task Shutdown()
         {
             await ReplyAsync("Goodbye!");
-            await _host.StopReliablyAsync();
+            _ = _host.StopAsync();
         }
     }
 }

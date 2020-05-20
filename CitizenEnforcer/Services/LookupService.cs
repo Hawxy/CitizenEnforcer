@@ -80,8 +80,8 @@ namespace CitizenEnforcer.Services
                 return;
             }
 
-            //TODO maybe add a fallback for this at some point?
-            var modUser = context.Client.GetUser(foundCase.ModId);
+            //TODO fallback
+            IUser modUser = context.Client.GetUser(foundCase.ModId);
 
             //We prefer to get the latest username, but if we can't, fallback to the database.
             IUser caseUser = context.Client.GetUser(foundCase.UserId) ?? (await context.Guild.GetBanSafelyAsync(foundCase.UserId))?.User;

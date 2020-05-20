@@ -120,7 +120,7 @@ namespace CitizenEnforcer
             var host = builder.Build();
             using (host)
             {
-                await host.RunReliablyAsync();
+                await host.RunAsync();
             }
         }
         public static string GetPassword()

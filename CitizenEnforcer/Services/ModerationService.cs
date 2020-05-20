@@ -18,6 +18,8 @@ along with this program.If not, see http://www.gnu.org/licenses/ */
 #endregion
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CitizenEnforcer.Common;
@@ -31,6 +33,8 @@ using Discord.WebSocket;
 using EFSecondLevelCache.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Newtonsoft.Json;
+using Sentry;
 
 namespace CitizenEnforcer.Services
 {
@@ -58,8 +62,18 @@ namespace CitizenEnforcer.Services
                 return;
 
             var caseID = await GenerateNewCaseID(guild.Id);
-            var logs = await guild.GetAuditLogsAsync(5).FlattenAsync();
-            var entry = logs.FirstOrDefault(x => (x.Data as BanAuditLogData)?.Target.Id == bannedUser.Id);
+
+            IEnumerable<RestAuditLogEntry> logs = null;
+            try
+            {
+                logs = await guild.GetAuditLogsAsync(5).FlattenAsync();
+            }
+            catch (Exception e)
+            {
+                SentrySdk.CaptureException(e);
+            }
+
+            var entry = logs?.FirstOrDefault(x => (x.Data as BanAuditLogData)?.Target.Id == bannedUser.Id);
 
             //if entry isn't null then use the data contained
             var logEntry = entry != null
@@ -84,7 +98,7 @@ namespace CitizenEnforcer.Services
 
             if (!await _botContext.Guilds.Cacheable().AsQueryable().AnyAsync(x => x.GuildId == guild.Id && x.IsModerationEnabled))
                 return;
-
+            
             var foundtb = await _botContext.TempBans.Include(x => x.ModLog).Cacheable().AsQueryable().FirstOrDefaultAsync(x => x.ModLog.UserId == bannedUser.Id && x.TempBanActive);
             if (foundtb != null)
             {
@@ -92,11 +106,21 @@ namespace CitizenEnforcer.Services
                 await _botContext.SaveChangesAsync();
             }
 
-            var logs = await guild.GetAuditLogsAsync(5).FlattenAsync();
-            var entry = logs.FirstOrDefault(x => (x.Data as UnbanAuditLogData)?.Target.Id == bannedUser.Id);
+            IEnumerable<RestAuditLogEntry> logs = null;
+            try
+            {
+                logs = await guild.GetAuditLogsAsync(5).FlattenAsync();
+            }
+            catch (Exception e)
+            {
+                SentrySdk.CaptureException(e);
+            }
+
+            var entry = logs?.FirstOrDefault(x => (x.Data as UnbanAuditLogData)?.Target.Id == bannedUser.Id);
             var builder = ModeratorFormats.GetUnbanBuilder(bannedUser, "Manual Unban", entry?.User);
             await SendEmbedToModLog(guild, builder);
             await SendMessageToAnnounce(guild, $"***{bannedUser}'s ban has been lifted***");
+
         }
 
         public async Task WarnUser(SocketCommandContext context, IGuildUser user, string reason)

@@ -118,7 +118,7 @@ namespace CitizenEnforcer.Modules
         [Command]
         [RequireInitialized(InitializedType.Basic)]
         [Summary("Allows you to set LoggingChannel, ModerationChannel and PublicAnnounceChannel")]
-        public async Task ChangeChannel(string changeField, ITextChannel channel)
+        public async Task ChangeChannel(string changeField, [RequireChannelPermissions]ITextChannel channel)
         {
             var guild = await _botContext.Guilds.AsQueryable().FirstOrDefaultAsync(x => x.GuildId == Context.Guild.Id);
             var field = typeof(Guild).GetProperty(changeField, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);

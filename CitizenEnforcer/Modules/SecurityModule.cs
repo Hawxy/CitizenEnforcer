@@ -27,6 +27,7 @@ using CitizenEnforcer.Services;
 using Discord;
 using Discord.Addons.Interactive;
 using Discord.Commands;
+using Discord.Net;
 using Discord.WebSocket;
 using Microsoft.Extensions.Caching.Memory;
 
@@ -133,7 +134,7 @@ namespace CitizenEnforcer.Modules
         [Command("mute")]
         [Summary("Mutes a user guild-wide")]
         [RequireUserPermission(GuildPermission.ManageRoles)]
-        public async Task MuteUser(SocketGuildUser user)
+        public async Task MuteUser([ErrorPrevent]SocketGuildUser user)
         {
             var muteRole = Context.Guild.Roles.SingleOrDefault(x => x.Name.Equals("Muted", StringComparison.OrdinalIgnoreCase) && !x.Permissions.SendMessages);
             if (muteRole == null)
@@ -145,14 +146,14 @@ namespace CitizenEnforcer.Modules
             if (user.Roles.Any(x => x.Name.Equals("Muted", StringComparison.OrdinalIgnoreCase)))
             {
                 await user.RemoveRoleAsync(muteRole);
-                await _moderationService.SendMessageToAnnounce(Context.Guild, $"***User {user} has been globally muted***");
-                await _moderationService.SendEmbedToModLog(Context.Guild, SecurityFormats.GetUserMuteLoggedBuilder(user, Context.User));
+                await _moderationService.SendMessageToAnnounce(Context.Guild, $"***User {user} has been unmuted***");
+                await _moderationService.SendEmbedToModLog(Context.Guild, SecurityFormats.GetUserUnMuteLoggedBuilder(user, Context.User));
             }
             else
             {
                 await user.AddRoleAsync(muteRole);
-                await _moderationService.SendMessageToAnnounce(Context.Guild, $"***User {user} has been unmuted***");
-                await _moderationService.SendEmbedToModLog(Context.Guild, SecurityFormats.GetUserUnMuteLoggedBuilder(user, Context.User));
+                await _moderationService.SendMessageToAnnounce(Context.Guild, $"***User {user} has been globally muted***");
+                await _moderationService.SendEmbedToModLog(Context.Guild, SecurityFormats.GetUserMuteLoggedBuilder(user, Context.User));
             }
         }
 
@@ -201,10 +202,12 @@ namespace CitizenEnforcer.Modules
                         }
                         catch (ArgumentOutOfRangeException)
                         {
-                            await _interactive.ReplyAndDeleteAsync(Context, "Unable to continue deleting messages: Cannot delete messages older than 2 weeks", timeout:TimeSpan.FromSeconds(10));
                             return;
                         }
-                       
+                        catch (HttpException)
+                        {
+                        }
+
                     }
                     deleteMessages.Add(msg);
                     index++;
