@@ -25,7 +25,6 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using CitizenEnforcer.Services;
 using Discord;
-using Discord.Addons.Hosting.Reliability;
 using Discord.Addons.Interactive;
 using Discord.Commands;
 using Microsoft.Extensions.Hosting;

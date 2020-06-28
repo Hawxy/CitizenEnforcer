@@ -25,7 +25,6 @@ using CitizenEnforcer.Context;
 using CitizenEnforcer.Services;
 using Discord;
 using Discord.Addons.Hosting;
-using Discord.Addons.Hosting.Reliability;
 using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.WebSocket;
@@ -68,17 +67,15 @@ namespace CitizenEnforcer
                         });
 
                 })
-                .ConfigureDiscordHost<DiscordSocketClient>((context, discordBuilder) =>
+                .ConfigureDiscordHost<DiscordSocketClient>((context, config) =>
                 {
-                    var config = new DiscordSocketConfig
+                    config.SocketConfig = new DiscordSocketConfig
                     {
                         LogLevel = LogSeverity.Info,
                         AlwaysDownloadUsers = true,
                         MessageCacheSize = 200
                     };
-
-                    discordBuilder.SetDiscordConfiguration(config);
-                    discordBuilder.SetToken(context.Configuration["Token"]);
+                    config.Token = context.Configuration["Token"];
                 })
                 .UseCommandService((context, config) =>
                 {
