@@ -35,6 +35,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
 using Sentry;
+using Serilog;
 
 namespace CitizenEnforcer.Services
 {
@@ -198,10 +199,13 @@ namespace CitizenEnforcer.Services
         {
             await context.Message.DeleteAsync();
 
-            var foundtb = await _botContext.TempBans.Include(y => y.ModLog).FirstOrDefaultAsync(x => x.TempBanActive && x.ModLog.UserId == user.Id);
+            var foundtb = await _botContext.TempBans
+                .Include(y => y.ModLog)
+                .FirstOrDefaultAsync(x => x.TempBanActive && x.ModLog.UserId == user.Id && x.ModLog.GuildId == context.Guild.Id);
             //If the user is TB'd then they're already banned and we don't need to do anything.
             if (foundtb != null)
             {
+                Log.Debug("Ban short circuit: A previous temp-ban was found for user {username}-{id}", user.Username, user.Id);
                 foundtb.TempBanActive = false;
                 await _botContext.SaveChangesAsync();
             }

@@ -69,6 +69,7 @@ namespace CitizenEnforcer.Services
             List<TempBan> Unbans = await _botContext.TempBans.Include(y=> y.ModLog).AsAsyncEnumerable().Where(x => x.TempBanActive && DateTimeOffset.UtcNow > x.ExpireDate).ToListAsync();
             foreach (TempBan ban in Unbans)
             {
+                _logger.LogDebug("Removing temp-ban for user {id} on guild {guildID}. Expiry: {expiry}. IsActive: {active}", ban.ModLog.UserId, ban.ModLog.GuildId, ban.ExpireDate.ToString(), ban.TempBanActive);
                 //find and unban
                 SocketGuild guild = _client.GetGuild(ban.ModLog.GuildId);
                 var guildban = await guild.GetBanSafelyAsync(ban.ModLog.UserId);
