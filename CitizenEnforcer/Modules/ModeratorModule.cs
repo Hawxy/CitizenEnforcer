@@ -25,8 +25,8 @@ using CitizenEnforcer.Preconditions;
 using CitizenEnforcer.Services;
 using CitizenEnforcer.TypeReaders;
 using Discord;
-using Discord.Addons.Interactive;
 using Discord.Commands;
+using Interactivity;
 using Microsoft.EntityFrameworkCore;
 
 namespace CitizenEnforcer.Modules
@@ -37,10 +37,10 @@ namespace CitizenEnforcer.Modules
     public class ModeratorModule : ModuleBase<SocketCommandContext>
     {
         public BotContext _botContext;
-        public InteractiveService _interactiveService;
+        public InteractivityService _interactiveService;
         public ModerationService _moderationService;
 
-        public ModeratorModule(BotContext botContext, InteractiveService interactiveService, ModerationService moderationService)
+        public ModeratorModule(BotContext botContext, InteractivityService interactiveService, ModerationService moderationService)
         {
             _botContext = botContext;
             _interactiveService = interactiveService;
@@ -112,7 +112,7 @@ namespace CitizenEnforcer.Modules
 
                     //lets be nice and cleanup afterwards
                     await Context.Message.DeleteAsync();
-                    await _interactiveService.ReplyAndDeleteAsync(Context, "<:thumbsup:338616449826291714>", timeout: TimeSpan.FromSeconds(5));
+                    _interactiveService.DelayedSendMessageAndDeleteAsync(Context.Channel, text: "<:thumbsup:338616449826291714>", deleteDelay: TimeSpan.FromSeconds(5));
                 }
             }
             else if (entry?.ModId == Context.User.Id)
@@ -134,7 +134,7 @@ namespace CitizenEnforcer.Modules
 
                     //lets be nice and cleanup afterwards
                     await Context.Message.DeleteAsync();
-                    await _interactiveService.ReplyAndDeleteAsync(Context, "<:thumbsup:338616449826291714>", timeout: TimeSpan.FromSeconds(5));
+                    _interactiveService.DelayedSendMessageAndDeleteAsync(Context.Channel, text: "<:thumbsup:338616449826291714>", deleteDelay: TimeSpan.FromSeconds(5));
                 }
             }
             else

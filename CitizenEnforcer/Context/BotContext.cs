@@ -17,14 +17,12 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.If not, see http://www.gnu.org/licenses/ */
 #endregion
 
-using System.Threading;
-using System.Threading.Tasks;
+using System.Linq;
 using CitizenEnforcer.Models;
-using EFSecondLevelCache.Core;
-using EFSecondLevelCache.Core.Contracts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Microsoft.EntityFrameworkCore.ValueGeneration.Internal;
 
 namespace CitizenEnforcer.Context
 {
@@ -44,33 +42,18 @@ namespace CitizenEnforcer.Context
                 .HasOne(m => m.TempBan)
                 .WithOne(i => i.ModLog)
                 .HasForeignKey<TempBan>(p => p.ModLogDBId);
-        }
 
-        public override int SaveChanges()
-        {
-            ChangeTracker.DetectChanges();
-            var changedEntityNames = this.GetChangedEntityNames();
-
-            ChangeTracker.AutoDetectChangesEnabled = false;
-            var result = base.SaveChanges();
-            ChangeTracker.AutoDetectChangesEnabled = true;
-
-            this.GetService<IEFCacheServiceProvider>().InvalidateCacheDependencies(changedEntityNames);
-
-            return result;
-        }
-        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = new CancellationToken())
-        {
-            ChangeTracker.DetectChanges();
-            var changedEntityNames = this.GetChangedEntityNames();
-
-            ChangeTracker.AutoDetectChangesEnabled = false; 
-            var result = base.SaveChangesAsync(cancellationToken);
-            ChangeTracker.AutoDetectChangesEnabled = true;
-
-            this.GetService<IEFCacheServiceProvider>().InvalidateCacheDependencies(changedEntityNames);
-
-            return result;
+            foreach (var property in modelBuilder.Model.GetEntityTypes()
+                .SelectMany(t => t.GetProperties())
+                .Where(p => p.ClrType == typeof(ulong)))
+            {
+                property.SetValueConverter(
+                    new ValueConverter<ulong, long>(
+                        convertToProviderExpression: ulongValue => (long)ulongValue,
+                        convertFromProviderExpression: longValue => (ulong)longValue,
+                        mappingHints: new ConverterMappingHints(valueGeneratorFactory: (p, t) => new TemporaryULongValueGenerator())
+                    ));
+            }
         }
     }
 

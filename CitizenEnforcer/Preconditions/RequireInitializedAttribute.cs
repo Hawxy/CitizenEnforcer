@@ -22,7 +22,7 @@ using System.Threading.Tasks;
 using CitizenEnforcer.Context;
 using CitizenEnforcer.Models;
 using Discord.Commands;
-using EFSecondLevelCache.Core;
+using EFCoreSecondLevelCacheInterceptor;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

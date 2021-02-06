@@ -17,21 +17,18 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.If not, see http://www.gnu.org/licenses/ */
 #endregion
 
-using System.Threading.Tasks;
-using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.WebSocket;
 
-namespace CitizenEnforcer.InteractiveCriterion
+namespace CitizenEnforcer.InteractiveCriteria
 {
-    internal class MentionsChannel : ICriterion<SocketMessage>
+    public static class InteractiveCriteria 
     {
-        public Task<bool> JudgeAsync(SocketCommandContext sourceContext, SocketMessage parameter)
+        public static bool MentionsChannel(SocketCommandContext context, SocketMessage message)
         {
-            bool ok = parameter.MentionedChannels.Count != 0 &&
-                      sourceContext.User.Id == parameter.Author.Id &&
-                      sourceContext.Channel.Id == parameter.Channel.Id;
-            return Task.FromResult(ok);
+            return message.MentionedChannels.Count != 0 
+                   && message.Author == context.User 
+                   && context.Channel.Id == message.Channel.Id;
         }
     }
 }

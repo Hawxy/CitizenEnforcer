@@ -24,7 +24,7 @@ using CitizenEnforcer.Context;
 using Discord;
 using Discord.Addons.Hosting;
 using Discord.WebSocket;
-using EFSecondLevelCache.Core;
+using EFCoreSecondLevelCacheInterceptor;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;

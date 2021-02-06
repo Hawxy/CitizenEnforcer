@@ -25,10 +25,10 @@ using CitizenEnforcer.Common;
 using CitizenEnforcer.Preconditions;
 using CitizenEnforcer.Services;
 using Discord;
-using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.Net;
 using Discord.WebSocket;
+using Interactivity;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace CitizenEnforcer.Modules
@@ -38,11 +38,11 @@ namespace CitizenEnforcer.Modules
     [RequireBotPermission(GuildPermission.ManageRoles | GuildPermission.ManageChannels | GuildPermission.SendMessages)]
     public class SecurityModule : ModuleBase<SocketCommandContext>
     {
-        public InteractiveService _interactive;
+        public InteractivityService _interactive;
         public IMemoryCache _banCache;
         public ModerationService _moderationService;
 
-        public SecurityModule(InteractiveService interactive, IMemoryCache banCache, ModerationService moderationService)
+        public SecurityModule(InteractivityService interactive, IMemoryCache banCache, ModerationService moderationService)
         {
             _interactive = interactive;
             _banCache = banCache;
@@ -89,7 +89,8 @@ namespace CitizenEnforcer.Modules
             var role = Context.Guild.EveryoneRole;
             if (!role.Permissions.SendMessages)
             {
-                await _interactive.ReplyAndDeleteAsync(Context, "Unable to freeze channel: Server currently locked down", timeout: TimeSpan.FromSeconds(15));
+                _interactive.DelayedSendMessageAndDeleteAsync(Context.Channel, text: "Unable to freeze channel: Server currently locked down", deleteDelay: TimeSpan.FromSeconds(15));
+                return;
             }
 
             var channel = mentionedChannel ?? Context.Channel as SocketTextChannel;
@@ -139,7 +140,7 @@ namespace CitizenEnforcer.Modules
             var muteRole = Context.Guild.Roles.SingleOrDefault(x => x.Name.Equals("Muted", StringComparison.OrdinalIgnoreCase) && !x.Permissions.SendMessages);
             if (muteRole == null)
             {
-                await _interactive.ReplyAndDeleteAsync(Context, "Unable to mute/unmute user: Muted role does not exist within guild or does not deny the ability to speak");
+                _interactive.DelayedSendMessageAndDeleteAsync(Context.Channel, text: "Unable to mute/unmute user: Muted role does not exist within guild or does not deny the ability to speak", deleteDelay: TimeSpan.FromSeconds(15));
                 return;
             }
 
@@ -165,7 +166,7 @@ namespace CitizenEnforcer.Modules
         {
             if (count > 100)
             {
-                await _interactive.ReplyAndDeleteAsync(Context, "Count should be less than 100", timeout: TimeSpan.FromSeconds(10));
+                _interactive.DelayedSendMessageAndDeleteAsync(Context.Channel, text: "Count should be less than 100", deleteDelay: TimeSpan.FromSeconds(10));
                 return;
             }
 

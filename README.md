@@ -1,5 +1,5 @@
 # CitizenEnforcer
-A Discord.Net moderation & edit/delete log bot running on .NET Core 3.1. Created for a partnered Discord server (35,000+ users). 
+A Discord.Net moderation & edit/delete log bot running on .NET 5.0. Created for a partnered Discord server (42,000+ users). 
 
 [![Build Status](https://dev.azure.com/GithubHawxy/CitizenEnforcer/_apis/build/status/Hawxy.CitizenEnforcer)](https://dev.azure.com/GithubHawxy/CitizenEnforcer/_build/latest?definitionId=1)
 
@@ -19,8 +19,8 @@ Libraries used:
 - [Discord.Net](https://github.com/discord-net/Discord.Net)
 - [Discord.Addons.Hosting](https://github.com/Hawxy/Discord.Addons.Hosting)
 - [Entity Framework Core](https://docs.microsoft.com/en-us/ef/core/)
-- [SeriLog](https://serilog.net/)
-- [Discord.Addons.Interactive](https://github.com/foxbot/Discord.Addons.Interactive)
+- [Serilog](https://serilog.net/)
+- [Discord.InteractivityAddon](https://github.com/Playwo/Discord.InteractivityAddon)
 
 For support enquires please join the [ZephyrDev Discord](https://discord.gg/evXfQ9v)
 
@@ -37,4 +37,4 @@ The config file sits in config/configuration.json and includes the bot's prefix 
 
 **Reminder:**
 
-This source under the AGPL license, please respect the conditions and push any code changes to a fork of the repo.
+This source is provided under the AGPL license, please respect the conditions and push any code changes to a fork of the repo.

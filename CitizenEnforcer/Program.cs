@@ -19,22 +19,20 @@ along with this program.If not, see http://www.gnu.org/licenses/ */
 
 using System;
 using System.Threading.Tasks;
-using CacheManager.Core;
 using CitizenEnforcer.Common;
 using CitizenEnforcer.Context;
 using CitizenEnforcer.Services;
 using Discord;
 using Discord.Addons.Hosting;
-using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.WebSocket;
-using EFSecondLevelCache.Core;
+using EFCoreSecondLevelCacheInterceptor;
+using Interactivity;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Sentry;
 using Serilog;
 using Serilog.Events;
 
@@ -54,14 +52,14 @@ namespace CitizenEnforcer
                 .UseSerilog((context, config) =>
                 {
                     config
-                        .WriteTo.Console()
+                        .WriteTo.Async(x=> x.Console())
                         .MinimumLevel.Verbose()
                         .MinimumLevel.Override("Microsoft", LogEventLevel.Error);
 
                     if (!string.IsNullOrEmpty(context.Configuration["Sentry"]))
                         config.WriteTo.Sentry(o =>
                         {
-                            o.Dsn = new Dsn(context.Configuration["Sentry"]);
+                            o.Dsn = context.Configuration["Sentry"];
                             o.MinimumBreadcrumbLevel = LogEventLevel.Debug;
                             o.MinimumEventLevel = LogEventLevel.Error;
                         });
@@ -77,7 +75,7 @@ namespace CitizenEnforcer
                     };
                     config.Token = context.Configuration["Token"];
                 })
-                .UseCommandService((context, config) =>
+                .UseCommandService((_, config) =>
                 {
                     config.LogLevel = LogSeverity.Verbose;
                     config.DefaultRunMode = RunMode.Async;
@@ -88,28 +86,25 @@ namespace CitizenEnforcer
                         .AddHostedService<EditDeleteLogger>()
                         .AddHostedService<UserUpdatedLogger>()
                         .AddHostedService<TempBanTimer>()
-                        .AddSingleton<InteractiveService>()
                         .AddSingleton<LookupService>()
                         .AddSingleton<ModerationService>()
                         .AddSingleton<Helper>()
-                        .AddDbContext<BotContext>(options =>
+                        .AddSingleton(x=> new InteractivityService(x.GetRequiredService<DiscordSocketClient>(), TimeSpan.FromMinutes(3)))
+                        .AddDbContext<BotContext>((serviceProvider, options) =>
                         {
+                            options.AddInterceptors(serviceProvider.GetRequiredService<SecondLevelCacheInterceptor>());
                             if (string.IsNullOrWhiteSpace(dbPassword))
                                 options.UseSqlite("Data Source=SCModBot.db");
                             else
-                                options.UseSqlite(InitializeSQLiteConnection(dbPassword));
+                                options.UseSqlite(new SqliteConnectionStringBuilder("Data Source=SCModBot.db")
+                                {
+                                    Mode = SqliteOpenMode.ReadWrite,
+                                    Password = dbPassword
+                                }.ToString());
                         }, ServiceLifetime.Transient)
                         .AddMemoryCache()
-                        .AddEFSecondLevelCache()
-                        .AddSingleton(typeof(ICacheManager<>), typeof(BaseCacheManager<>))
-                        .AddSingleton(typeof(ICacheManagerConfiguration),
-                            new CacheManager.Core.ConfigurationBuilder()
-                                .WithJsonSerializer()
-                                .WithMicrosoftMemoryCacheHandle("MemoryCache")
-                                .WithExpiration(ExpirationMode.Absolute, TimeSpan.FromMinutes(30))
-                                .DisablePerformanceCounters()
-                                .DisableStatistics()
-                                .Build());
+                        .AddEFSecondLevelCache(options =>
+                            options.UseMemoryCacheProvider().DisableLogging(true));
                     //TODO Replace with singleton/factory at some point
                     ModeratorFormats.Prefix = context.Configuration["Prefix"];
                 });
@@ -145,19 +140,6 @@ namespace CitizenEnforcer
             while (key.Key != ConsoleKey.Enter);
             Console.WriteLine();
             return pass;
-        }
-
-        private static SqliteConnection InitializeSQLiteConnection(string password)
-        {
-            var connection = new SqliteConnection("Data Source=SCModBot.db");
-            connection.Open();
-            var command = connection.CreateCommand();
-            command.CommandText = "SELECT quote($password);";
-            command.Parameters.AddWithValue("$password", password);
-            command.CommandText = "PRAGMA key = " + command.ExecuteScalar();
-            command.Parameters.Clear();
-            command.ExecuteNonQuery();
-            return connection;
         }
     }
 

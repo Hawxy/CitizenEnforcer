@@ -93,7 +93,7 @@ namespace CitizenEnforcer.Services
                 InfractionType.Kick => ModeratorFormats.GetKickBuilder(username, foundCase.UserId, modUser, caseID, foundCase.Reason, foundCase.DateTime),
                 InfractionType.TempBan => ModeratorFormats.GetTempBanBuilder(username, foundCase.UserId, modUser, caseID, foundCase.Reason, foundCase.DateTime, foundCase.TempBan.ExpireDate),
                 InfractionType.Ban => ModeratorFormats.GetBanBuilder(username, foundCase.UserId, modUser, caseID, foundCase.Reason, foundCase.DateTime),
-                _ => throw new ArgumentOutOfRangeException()
+                _ => throw new NotImplementedException(),
             };
 
             await context.Channel.SendMessageAsync(embed: embed.Build());

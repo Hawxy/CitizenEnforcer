@@ -30,10 +30,9 @@ using Discord.Commands;
 using Discord.Net;
 using Discord.Rest;
 using Discord.WebSocket;
-using EFSecondLevelCache.Core;
+using EFCoreSecondLevelCacheInterceptor;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
-using Newtonsoft.Json;
 using Sentry;
 using Serilog;
 

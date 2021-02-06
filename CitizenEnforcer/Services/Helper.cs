@@ -60,10 +60,10 @@ namespace CitizenEnforcer.Services
                     var result = await cmd.CheckPreconditionsAsync(context, _map);
                     if (result.IsSuccess)
                     {
-                        description.Append($"{prefix}{cmd.Aliases.First()} ");
+                        description.Append($"{prefix}{cmd.Aliases[0]} ");
                         if (cmd.Parameters.Any())
                             description.Append($"[{string.Join(", ", cmd.Parameters.Select(p => p.Name))}]");
-                        description.Append("\n");
+                        description.Append('\n');
                     }
                 }
                 if (!string.IsNullOrWhiteSpace(description.ToString()))

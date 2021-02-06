@@ -53,7 +53,7 @@ namespace CitizenEnforcer.Common
             manbuilder.AddField(z =>
             {
                 z.Name = "Reason";
-                z.Value = reason ?? $"Responsible Moderator, please type ``{Prefix}r {caseID}`` to add a reason";
+                z.Value = reason.TruncateEmbedLimit() ?? $"Responsible Moderator, please type ``{Prefix}r {caseID}`` to add a reason";
             });
 
             return manbuilder;
@@ -82,7 +82,7 @@ namespace CitizenEnforcer.Common
             manbuilder.AddField(z =>
             {
                 z.Name = "Reason";
-                z.Value = reason ?? $"Responsible Moderator, please type ``{Prefix}r {caseID}`` to add a reason";
+                z.Value = reason.TruncateEmbedLimit() ?? $"Responsible Moderator, please type ``{Prefix}r {caseID}`` to add a reason";
             });
             return manbuilder;
         }
@@ -115,7 +115,7 @@ namespace CitizenEnforcer.Common
             manbuilder.AddField(z =>
             {
                 z.Name = "Reason";
-                z.Value = reason ?? $"Responsible Moderator, please type ``{Prefix}r {caseID}`` to add a reason";
+                z.Value = reason.TruncateEmbedLimit() ?? $"Responsible Moderator, please type ``{Prefix}r {caseID}`` to add a reason";
             });
 
             return manbuilder;
@@ -149,7 +149,7 @@ namespace CitizenEnforcer.Common
             manbuilder.AddField(z =>
             {
                 z.Name = "Reason";
-                z.Value = reason ?? $"Responsible Moderator, please type ``{Prefix}r {caseID}`` to add a reason";
+                z.Value = reason.TruncateEmbedLimit() ?? $"Responsible Moderator, please type ``{Prefix}r {caseID}`` to add a reason";
             });
 
             return manbuilder;
@@ -209,6 +209,12 @@ namespace CitizenEnforcer.Common
             });
 
             return manbuilder;
+        }
+
+        public static string TruncateEmbedLimit(this string value)
+        {
+            if (string.IsNullOrEmpty(value)) return value;
+            return value.Length <= 1000 ? value : value.Substring(0, 1000);
         }
     }
 }

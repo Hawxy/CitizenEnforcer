@@ -23,12 +23,11 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using CitizenEnforcer.Context;
-using CitizenEnforcer.InteractiveCriterion;
 using CitizenEnforcer.Models;
 using CitizenEnforcer.Preconditions;
 using Discord;
-using Discord.Addons.Interactive;
 using Discord.Commands;
+using Interactivity;
 using Microsoft.EntityFrameworkCore;
 // ReSharper disable SimplifyLinqExpression
 
@@ -39,10 +38,10 @@ namespace CitizenEnforcer.Modules
     [RequireUserPermission(GuildPermission.KickMembers)]
     public class SetupModule : ModuleBase<SocketCommandContext>
     {
-        private readonly InteractiveService _interactive;
+        private readonly InteractivityService _interactive;
         private readonly BotContext _botContext;
 
-        public SetupModule(InteractiveService interactive, BotContext botContext)
+        public SetupModule(InteractivityService interactive, BotContext botContext)
         {
             _interactive = interactive;
             _botContext = botContext;
@@ -62,8 +61,8 @@ namespace CitizenEnforcer.Modules
 
             await ReplyAsync("Each response will wait for a maximum of 200 seconds for you to answer. If an error/timeout occurs, you will need to start again.");
             await ReplyAsync("State the logging channel that guild events will be saved to (message edit/deletes + user edits):");
-            var response = await _interactive.NextMessageAsync(Context, new MentionsChannel(), TimeSpan.FromSeconds(200));
-            var channel = response.MentionedChannels.ElementAt(0);
+            var response = await _interactive.NextMessageAsync(x=> InteractiveCriteria.InteractiveCriteria.MentionsChannel(Context, x)  , timeout: TimeSpan.FromSeconds(200));
+            var channel = response.Value.MentionedChannels.ElementAt(0);
 
             var guild = new Guild
             {
@@ -76,8 +75,8 @@ namespace CitizenEnforcer.Modules
 
             #region Channels to log
             await ReplyAsync("Mention all channels that the bot should monitor for logging purposes:");
-            response = await _interactive.NextMessageAsync(Context, new MentionsChannel(), TimeSpan.FromSeconds(200));
-            foreach (var cn in response.MentionedChannels)
+            response = await _interactive.NextMessageAsync(x => InteractiveCriteria.InteractiveCriteria.MentionsChannel(Context, x), timeout: TimeSpan.FromSeconds(200));
+            foreach (var cn in response.Value.MentionedChannels)
             {
                 await _botContext.RegisteredChannels.AddAsync(new RegisteredChannel
                 {
@@ -93,8 +92,8 @@ namespace CitizenEnforcer.Modules
             #region ModLog
 
             await ReplyAsync("Mention the channel you want moderation logs (bans/kicks etc) to be stored in. Please make sure the bot has read/write access to this channel:");
-            response = await _interactive.NextMessageAsync(Context, new MentionsChannel(), TimeSpan.FromSeconds(200));
-            var modchannel = response.MentionedChannels.ElementAt(0);
+            response = await _interactive.NextMessageAsync(x => InteractiveCriteria.InteractiveCriteria.MentionsChannel(Context, x), timeout: TimeSpan.FromSeconds(200));
+            var modchannel = response.Value.MentionedChannels.ElementAt(0);
 
             guild.ModerationChannel = modchannel.Id;
             guild.IsModerationEnabled = true;
@@ -105,8 +104,8 @@ namespace CitizenEnforcer.Modules
             #region PublicAnnounce
 
             await ReplyAsync("Mention the channel you want public moderation announcements to be sent to:");
-            response = await _interactive.NextMessageAsync(Context, new MentionsChannel(), TimeSpan.FromSeconds(200));
-            var publicchannel = response.MentionedChannels.ElementAt(0);
+            response = await _interactive.NextMessageAsync(x => InteractiveCriteria.InteractiveCriteria.MentionsChannel(Context, x), timeout: TimeSpan.FromSeconds(200));
+            var publicchannel = response.Value.MentionedChannels.ElementAt(0);
             guild.PublicAnnouceChannel = publicchannel.Id;
             guild.IsPublicAnnounceEnabled = true;
             await _botContext.Guilds.AddAsync(guild);

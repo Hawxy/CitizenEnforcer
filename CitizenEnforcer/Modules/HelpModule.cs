@@ -25,8 +25,8 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using CitizenEnforcer.Services;
 using Discord;
-using Discord.Addons.Interactive;
 using Discord.Commands;
+using Interactivity;
 using Microsoft.Extensions.Hosting;
 
 namespace CitizenEnforcer.Modules
@@ -34,10 +34,10 @@ namespace CitizenEnforcer.Modules
     public class HelpModule : ModuleBase<SocketCommandContext>
     {
         private readonly Helper _help;
-        private readonly InteractiveService _interactiveService;
+        private readonly InteractivityService _interactiveService;
         private readonly IHost _host;
 
-        public HelpModule(Helper help, InteractiveService interactiveService, IHost host)
+        public HelpModule(Helper help, InteractivityService interactiveService, IHost host)
         {
             _help = help;
             _interactiveService = interactiveService;
@@ -49,7 +49,7 @@ namespace CitizenEnforcer.Modules
         [RequireContext(ContextType.Guild)]
         public async Task Help()
         {
-            await _interactiveService.ReplyAndDeleteAsync(Context, "Sending you list of my commands now!", timeout: TimeSpan.FromSeconds(10));
+            _interactiveService.DelayedSendMessageAndDeleteAsync(Context.Channel, text: "Sending you list of my commands now!", deleteDelay: TimeSpan.FromSeconds(10));
             await _help.HelpAsync(Context);
         }
         [Command("help")]
