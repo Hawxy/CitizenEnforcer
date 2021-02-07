@@ -50,31 +50,31 @@ namespace CitizenEnforcer.Modules
         [Command("warn")]
         [Alias("w")]
         [Summary("Logs a user warning. Supports an optional specified reason")]
-        public Task Warn([ErrorPrevent]IGuildUser user, [Remainder] string reason = null) => _moderationService.WarnUser(Context, user, Context.Message.ResolveAtString(reason));
+        public Task Warn([ErrorPrevent]IGuildUser user, [Remainder][ReasonLimit] string reason = null) => _moderationService.WarnUser(Context, user, Context.Message.ResolveAtString(reason));
 
         [Command("kick")]
         [Alias("k")]
         [RequireBotPermission(GuildPermission.KickMembers)]
         [Summary("Removes a user from the server. Supports an optional specified reason")]
-        public Task Kick([ErrorPrevent]IGuildUser user, [Remainder] string reason = null) => _moderationService.KickUser(Context, user, Context.Message.ResolveAtString(reason));
+        public Task Kick([ErrorPrevent]IGuildUser user, [Remainder][ReasonLimit] string reason = null) => _moderationService.KickUser(Context, user, Context.Message.ResolveAtString(reason));
 
         [Command("tempban")]
         [Alias("tb")]
         [RequireBotPermission(GuildPermission.BanMembers)]
         [Summary("Temporarily bans a user for 3 days. Supports an optional specified reason")]
-        public Task TempBan([ErrorPrevent]IGuildUser user, [Remainder] string reason = null) => _moderationService.TempBanUser(Context, user, Context.Message.ResolveAtString(reason));
+        public Task TempBan([ErrorPrevent]IGuildUser user, [Remainder][ReasonLimit] string reason = null) => _moderationService.TempBanUser(Context, user, Context.Message.ResolveAtString(reason));
 
         [Command("softban")]
         [Alias("sb")]
         [RequireBotPermission(GuildPermission.BanMembers)]
         [Summary("Bans a user without deleting message history. Supports escalation of a temp-ban and offline bans. Supports an optional specified reason")]
-        public Task SoftBan([ErrorPrevent][OverrideTypeReader(typeof(ExtendedUserTypeReader<IUser>))]IUser user, [Remainder] string reason = null) => _moderationService.BanUser(Context, user, ModerationService.BanType.SoftBan, Context.Message.ResolveAtString(reason));
+        public Task SoftBan([ErrorPrevent][OverrideTypeReader(typeof(ExtendedUserTypeReader<IUser>))]IUser user, [Remainder][ReasonLimit] string reason = null) => _moderationService.BanUser(Context, user, ModerationService.BanType.SoftBan, Context.Message.ResolveAtString(reason));
 
         [Command("ban")]
         [Alias("b")]
         [RequireBotPermission(GuildPermission.BanMembers)]
         [Summary("Bans and deletes recent message history. Supports escalation of a temp-ban and offline bans. Supports an optional specified reason")]
-        public Task Ban([ErrorPrevent][OverrideTypeReader(typeof(ExtendedUserTypeReader<IUser>))]IUser user, [Remainder] string reason = null) => _moderationService.BanUser(Context, user, ModerationService.BanType.HardBan, Context.Message.ResolveAtString(reason));
+        public Task Ban([ErrorPrevent][OverrideTypeReader(typeof(ExtendedUserTypeReader<IUser>))]IUser user, [Remainder][ReasonLimit] string reason = null) => _moderationService.BanUser(Context, user, ModerationService.BanType.HardBan, Context.Message.ResolveAtString(reason));
 
         [Command("unban")]
         [Alias("ub")]
@@ -85,7 +85,7 @@ namespace CitizenEnforcer.Modules
         [Command("reason")]
         [Alias("r")]
         [Summary("Sets the reason of a given caseID")]
-        public async Task Reason(ulong caseID, [Remainder] string reason)
+        public async Task Reason(ulong caseID, [Remainder][ReasonLimit] string reason)
         {
             reason = Context.Message.ResolveAtString(reason);
             var entry = await _botContext.ModLogs.Include(z=> z.Guild).FirstOrDefaultAsync(x => x.ModLogCaseID == caseID && x.GuildId == Context.Guild.Id);

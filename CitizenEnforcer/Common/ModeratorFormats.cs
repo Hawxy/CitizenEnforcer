@@ -214,7 +214,12 @@ namespace CitizenEnforcer.Common
         public static string TruncateEmbedLimit(this string value)
         {
             if (string.IsNullOrEmpty(value)) return value;
-            return value.Length <= 1000 ? value : value.Substring(0, 1000);
+            if (value.Length <= 1000)
+                return value;
+
+            var truncated = value.Substring(0, 1000);
+
+            return $"{truncated} (+{value.Length - 1000})";
         }
     }
 }
