@@ -36,15 +36,15 @@ namespace CitizenEnforcer.Services
     public class TempBanTimer : IHostedService, IAsyncDisposable
     {
         private Timer _timer;
-        private readonly BotContext _botContext;
+        private readonly IDbContextFactory<BotContext> _contextFactory;
         private readonly DiscordSocketClient _client;
         private readonly ModerationService _moderationService;
         private readonly IMemoryCache _banCache;
         private readonly ILogger<TempBanTimer> _logger;
 
-        public TempBanTimer(BotContext botContext, DiscordSocketClient client, ModerationService moderationService, IMemoryCache banCache, ILogger<TempBanTimer> logger)
+        public TempBanTimer(IDbContextFactory<BotContext> contextFactory, DiscordSocketClient client, ModerationService moderationService, IMemoryCache banCache, ILogger<TempBanTimer> logger)
         {
-            _botContext = botContext;
+            _contextFactory = contextFactory;
             _client = client;
             _moderationService = moderationService;
             _banCache = banCache;
@@ -65,8 +65,10 @@ namespace CitizenEnforcer.Services
 
         private async void CheckBan()
         {
+            await using var botContext = _contextFactory.CreateDbContext();
+
             _logger.LogDebug("Checking for expired tempbans....");
-            List<TempBan> Unbans = await _botContext.TempBans.Include(y=> y.ModLog).AsAsyncEnumerable().Where(x => x.TempBanActive && DateTimeOffset.UtcNow > x.ExpireDate).ToListAsync();
+            List<TempBan> Unbans = await botContext.TempBans.Include(y=> y.ModLog).AsAsyncEnumerable().Where(x => x.TempBanActive && DateTimeOffset.UtcNow > x.ExpireDate).ToListAsync();
             foreach (TempBan ban in Unbans)
             {
                 _logger.LogDebug("Removing temp-ban for user {id} on guild {guildID}. Expiry: {expiry}. IsActive: {active}", ban.ModLog.UserId, ban.ModLog.GuildId, ban.ExpireDate.ToString(), ban.TempBanActive);
@@ -77,7 +79,7 @@ namespace CitizenEnforcer.Services
                 if (guildban == null)
                 {
                     ban.TempBanActive = false;
-                    await _botContext.SaveChangesAsync();
+                    await botContext.SaveChangesAsync();
                     continue;
                 }
                 _banCache.Set(ban.ModLog.UserId, new ModerationService.CacheModel(guild.Id, ModerationService.CacheType.UnbanReject), TimeSpan.FromSeconds(5));
@@ -88,11 +90,11 @@ namespace CitizenEnforcer.Services
                 //log the unban
                 var builder = ModeratorFormats.GetUnbanBuilder(guildban.User, "TempBan Expired");
 
-                await _moderationService.SendEmbedToModLog(guild, builder);
-                await _moderationService.SendMessageToAnnounce(guild, $"***{guildban.User}'s temporary ban has expired***");
+                await _moderationService.SendEmbedToModLog(botContext, guild, builder);
+                await _moderationService.SendMessageToAnnounce(botContext, guild, $"***{guildban.User}'s temporary ban has expired***");
 
             }
-            await _botContext.SaveChangesAsync();
+            await botContext.SaveChangesAsync();
         }
 
         public ValueTask DisposeAsync()

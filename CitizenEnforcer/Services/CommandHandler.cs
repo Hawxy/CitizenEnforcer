@@ -67,6 +67,7 @@ namespace CitizenEnforcer.Services
 
             using (SentrySdk.PushScope())
             {
+                using var typing = incomingMessage.Channel.EnterTypingState();
                 var context = new SocketCommandContext(_client, message);
                 SentrySdk.ConfigureScope(s =>
                 {

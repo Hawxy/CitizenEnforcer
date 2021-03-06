@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CitizenEnforcer.Common;
+using CitizenEnforcer.Context;
 using CitizenEnforcer.Preconditions;
 using CitizenEnforcer.Services;
 using Discord;
@@ -38,15 +39,17 @@ namespace CitizenEnforcer.Modules
     [RequireBotPermission(GuildPermission.ManageRoles | GuildPermission.ManageChannels | GuildPermission.SendMessages)]
     public class SecurityModule : ModuleBase<SocketCommandContext>
     {
-        public InteractivityService _interactive;
-        public IMemoryCache _banCache;
-        public ModerationService _moderationService;
+        private readonly InteractivityService _interactive;
+        private readonly IMemoryCache _banCache;
+        private readonly ModerationService _moderationService;
+        private readonly BotContext _context;
 
-        public SecurityModule(InteractivityService interactive, IMemoryCache banCache, ModerationService moderationService)
+        public SecurityModule(InteractivityService interactive, IMemoryCache banCache, ModerationService moderationService, BotContext context)
         {
             _interactive = interactive;
             _banCache = banCache;
             _moderationService = moderationService;
+            _context = context;
         }
 
         [Command("lockdown")]
@@ -62,10 +65,10 @@ namespace CitizenEnforcer.Modules
                 await role.ModifyAsync(x => x.Permissions = perms);
 
                 var pubEmbed = SecurityFormats.GetPublicLockdownBuilder(Context.User);
-                await _moderationService.SendMessageToAnnounce(Context.Guild, embed: pubEmbed);
+                await _moderationService.SendMessageToAnnounce(_context, Context.Guild, embed: pubEmbed);
 
                 var logEmbed = SecurityFormats.GetLockdownBuilder(Context.User);
-                await _moderationService.SendEmbedToModLog(Context.Guild, logEmbed);
+                await _moderationService.SendEmbedToModLog(_context, Context.Guild, logEmbed);
             }
             else
             {
@@ -73,10 +76,10 @@ namespace CitizenEnforcer.Modules
                 await role.ModifyAsync(x => x.Permissions = perms);
 
                 var pubEmbed = SecurityFormats.GetPublicLiftedBuilder(Context.User);
-                await _moderationService.SendMessageToAnnounce(Context.Guild, embed: pubEmbed);
+                await _moderationService.SendMessageToAnnounce(_context, Context.Guild, embed: pubEmbed);
 
                 var logEmbed = SecurityFormats.GetLiftedBuilder(Context.User);
-                await _moderationService.SendEmbedToModLog(Context.Guild, logEmbed);
+                await _moderationService.SendEmbedToModLog(_context, Context.Guild, logEmbed);
             }
             
         }
@@ -106,7 +109,7 @@ namespace CitizenEnforcer.Modules
                 await channel.SendMessageAsync(embed: pubEmbed.Build());
 
                 var logEmbed = SecurityFormats.GetLoggedFreezeBuilder(Context.User, channel);
-                await _moderationService.SendEmbedToModLog(Context.Guild, logEmbed);
+                await _moderationService.SendEmbedToModLog(_context, Context.Guild, logEmbed);
 
             }
             else if (channelRole.Value.SendMessages == PermValue.Deny)
@@ -116,7 +119,7 @@ namespace CitizenEnforcer.Modules
 
                 var embed = SecurityFormats.GetUnfrozenBuilder(Context.User);
                 await channel.SendMessageAsync(embed: embed.Build());
-                await _moderationService.SendEmbedToModLog(Context.Guild, embed);
+                await _moderationService.SendEmbedToModLog(_context, Context.Guild, embed);
 
             }
         }
@@ -147,14 +150,14 @@ namespace CitizenEnforcer.Modules
             if (user.Roles.Any(x => x.Name.Equals("Muted", StringComparison.OrdinalIgnoreCase)))
             {
                 await user.RemoveRoleAsync(muteRole);
-                await _moderationService.SendMessageToAnnounce(Context.Guild, $"***User {user} has been unmuted***");
-                await _moderationService.SendEmbedToModLog(Context.Guild, SecurityFormats.GetUserUnMuteLoggedBuilder(user, Context.User));
+                await _moderationService.SendMessageToAnnounce(_context, Context.Guild, $"***User {user} has been unmuted***");
+                await _moderationService.SendEmbedToModLog(_context, Context.Guild, SecurityFormats.GetUserUnMuteLoggedBuilder(user, Context.User));
             }
             else
             {
                 await user.AddRoleAsync(muteRole);
-                await _moderationService.SendMessageToAnnounce(Context.Guild, $"***User {user} has been globally muted***");
-                await _moderationService.SendEmbedToModLog(Context.Guild, SecurityFormats.GetUserMuteLoggedBuilder(user, Context.User));
+                await _moderationService.SendMessageToAnnounce(_context, Context.Guild, $"***User {user} has been globally muted***");
+                await _moderationService.SendEmbedToModLog(_context, Context.Guild, SecurityFormats.GetUserMuteLoggedBuilder(user, Context.User));
             }
         }
 

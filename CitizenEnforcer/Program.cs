@@ -86,22 +86,12 @@ namespace CitizenEnforcer
                         .AddHostedService<EditDeleteLogger>()
                         .AddHostedService<UserUpdatedLogger>()
                         .AddHostedService<TempBanTimer>()
-                        .AddSingleton<LookupService>()
+                        .AddTransient<LookupService>()
                         .AddSingleton<ModerationService>()
                         .AddSingleton<Helper>()
                         .AddSingleton(x=> new InteractivityService(x.GetRequiredService<DiscordSocketClient>(), TimeSpan.FromMinutes(3)))
-                        .AddDbContext<BotContext>((serviceProvider, options) =>
-                        {
-                            options.AddInterceptors(serviceProvider.GetRequiredService<SecondLevelCacheInterceptor>());
-                            if (string.IsNullOrWhiteSpace(dbPassword))
-                                options.UseSqlite("Data Source=SCModBot.db");
-                            else
-                                options.UseSqlite(new SqliteConnectionStringBuilder("Data Source=SCModBot.db")
-                                {
-                                    Mode = SqliteOpenMode.ReadWrite,
-                                    Password = dbPassword
-                                }.ToString());
-                        }, ServiceLifetime.Transient)
+                        .AddDbContextPool<BotContext>((serviceProvider, options) => ConfigureDbContext(serviceProvider, options, dbPassword))
+                        .AddPooledDbContextFactory<BotContext>((serviceProvider, options) => ConfigureDbContext(serviceProvider, options, dbPassword))
                         .AddMemoryCache()
                         .AddEFSecondLevelCache(options =>
                             options.UseMemoryCacheProvider().DisableLogging(true));
@@ -115,6 +105,20 @@ namespace CitizenEnforcer
                 await host.RunAsync();
             }
         }
+
+        private static void ConfigureDbContext(IServiceProvider provider, DbContextOptionsBuilder options, string dbPassword)
+        {
+            options.AddInterceptors(provider.GetRequiredService<SecondLevelCacheInterceptor>());
+            if (string.IsNullOrWhiteSpace(dbPassword))
+                options.UseSqlite("Data Source=SCModBot.db");
+            else
+                options.UseSqlite(new SqliteConnectionStringBuilder("Data Source=SCModBot.db")
+                {
+                    Mode = SqliteOpenMode.ReadWrite,
+                    Password = dbPassword
+                }.ToString());
+        }
+
         public static string GetPassword()
         {
             Console.Write("Please enter the database password: ");

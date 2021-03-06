@@ -40,11 +40,11 @@ namespace CitizenEnforcer.Services
 {
     public class ModerationService
     {
-        private readonly BotContext _botContext;
+        private readonly IDbContextFactory<BotContext> _contextFactory;
         private readonly IMemoryCache _banCache;
-        public ModerationService(BotContext botContext, DiscordSocketClient client, IMemoryCache memoryCache)
+        public ModerationService(IDbContextFactory<BotContext> contextFactory, DiscordSocketClient client, IMemoryCache memoryCache)
         {
-            _botContext = botContext;
+            _contextFactory = contextFactory;
             _banCache = memoryCache;
             client.UserBanned += HandleUserBanned;
             client.UserUnbanned += HandleUserUnbanned;
@@ -52,16 +52,17 @@ namespace CitizenEnforcer.Services
 
         private async Task HandleUserBanned(SocketUser bannedUser, SocketGuild guild)
         {
+            await using var botContext = _contextFactory.CreateDbContext();
             //if the user is already cached then reject the ban event
             if (_banCache.TryGetValue(bannedUser.Id, out CacheModel value) && value.CacheType == CacheType.BanReject)
                 return;
 
             _banCache.Set(bannedUser.Id, new CacheModel(guild.Id), TimeSpan.FromSeconds(5));
 
-            if (!await _botContext.Guilds.Cacheable().AsQueryable().AnyAsync(x => x.GuildId == guild.Id && x.IsModerationEnabled))
+            if (!await botContext.Guilds.Cacheable().AsQueryable().AnyAsync(x => x.GuildId == guild.Id && x.IsModerationEnabled))
                 return;
 
-            var caseID = await GenerateNewCaseID(guild.Id);
+            var caseID = await GenerateNewCaseID(botContext, guild.Id);
 
             IEnumerable<RestAuditLogEntry> logs = null;
             try
@@ -80,30 +81,31 @@ namespace CitizenEnforcer.Services
                 ? new ModLog(entry.User, guild.Id, bannedUser, caseID, InfractionType.Ban, entry.Reason)
                 : new ModLog(caseID, guild.Id, bannedUser, InfractionType.Ban);
 
-            await _botContext.ModLogs.AddAsync(logEntry);
-            await _botContext.SaveChangesAsync();
+            await botContext.ModLogs.AddAsync(logEntry);
+            await botContext.SaveChangesAsync();
 
             var builder = ModeratorFormats.GetBanBuilder(bannedUser, entry?.User, caseID, entry?.Reason, logEntry.DateTime);
-            var message = await SendEmbedToModLog(guild, builder);
+            var message = await SendEmbedToModLog(botContext, guild, builder);
 
             logEntry.LoggedMessageId = message.Id;
-            await _botContext.SaveChangesAsync();
-            await SendMessageToAnnounce(guild, $"***{bannedUser} has been permanently banned from the server***");
+            await botContext.SaveChangesAsync();
+            await SendMessageToAnnounce(botContext, guild, $"***{bannedUser} has been permanently banned from the server***");
         }
         private async Task HandleUserUnbanned(SocketUser bannedUser, SocketGuild guild)
         {
+            await using var botContext = _contextFactory.CreateDbContext();
             //if the user is cached then reject the unban event
             if (_banCache.TryGetValue(bannedUser.Id, out CacheModel value) && value.CacheType == CacheType.UnbanReject)
                 return;
 
-            if (!await _botContext.Guilds.Cacheable().AsQueryable().AnyAsync(x => x.GuildId == guild.Id && x.IsModerationEnabled))
+            if (!await botContext.Guilds.Cacheable().AsQueryable().AnyAsync(x => x.GuildId == guild.Id && x.IsModerationEnabled))
                 return;
             
-            var foundtb = await _botContext.TempBans.Include(x => x.ModLog).Cacheable().AsQueryable().FirstOrDefaultAsync(x => x.ModLog.UserId == bannedUser.Id && x.TempBanActive);
+            var foundtb = await botContext.TempBans.Include(x => x.ModLog).Cacheable().AsQueryable().FirstOrDefaultAsync(x => x.ModLog.UserId == bannedUser.Id && x.TempBanActive);
             if (foundtb != null)
             {
                 foundtb.TempBanActive = false;
-                await _botContext.SaveChangesAsync();
+                await botContext.SaveChangesAsync();
             }
 
             IEnumerable<RestAuditLogEntry> logs = null;
@@ -118,37 +120,39 @@ namespace CitizenEnforcer.Services
 
             var entry = logs?.FirstOrDefault(x => (x.Data as UnbanAuditLogData)?.Target.Id == bannedUser.Id);
             var builder = ModeratorFormats.GetUnbanBuilder(bannedUser, "Manual Unban", entry?.User);
-            await SendEmbedToModLog(guild, builder);
-            await SendMessageToAnnounce(guild, $"***{bannedUser}'s ban has been lifted***");
+            await SendEmbedToModLog(botContext,guild, builder);
+            await SendMessageToAnnounce(botContext, guild, $"***{bannedUser}'s ban has been lifted***");
 
         }
 
         public async Task WarnUser(SocketCommandContext context, IGuildUser user, string reason)
         {
+            await using var botContext = _contextFactory.CreateDbContext();
             await context.Message.DeleteAsync();
-            ulong caseID = await GenerateNewCaseID(context.Guild.Id);
+            ulong caseID = await GenerateNewCaseID(botContext, context.Guild.Id);
             var logEntry = new ModLog(context, user, caseID, InfractionType.Warning, reason);
 
-            await _botContext.ModLogs.AddAsync(logEntry);
-            await _botContext.SaveChangesAsync();
+            await botContext.ModLogs.AddAsync(logEntry);
+            await botContext.SaveChangesAsync();
 
             var builder = ModeratorFormats.GetWarnBuilder(user, context.User, caseID, reason, logEntry.DateTime);
 
-            var message = await SendEmbedToModLog(context.Guild, builder);
+            var message = await SendEmbedToModLog(botContext, context.Guild, builder);
             logEntry.LoggedMessageId = message.Id;
-            await _botContext.SaveChangesAsync();
+            await botContext.SaveChangesAsync();
 
-            await SendMessageToAnnounce(context.Guild, $"***{user} has received an official warning***");
+            await SendMessageToAnnounce(botContext, context.Guild, $"***{user} has received an official warning***");
             await SendMessageToUser(user, $"You have been warned on the guild ``{context.Guild.Name}`` {(string.IsNullOrWhiteSpace(reason) ? string.Empty : $"for: ``{reason}``" )}");
         }
         public async Task KickUser(SocketCommandContext context, IGuildUser user, string reason)
         {
+            await using var botContext = _contextFactory.CreateDbContext();
             await context.Message.DeleteAsync();
-            ulong caseID = await GenerateNewCaseID(context.Guild.Id);
+            ulong caseID = await GenerateNewCaseID(botContext, context.Guild.Id);
             var logEntry = new ModLog(context, user, caseID, InfractionType.Kick, reason);
 
-            await _botContext.ModLogs.AddAsync(logEntry);
-            await _botContext.SaveChangesAsync();
+            await botContext.ModLogs.AddAsync(logEntry);
+            await botContext.SaveChangesAsync();
 
             var builder = ModeratorFormats.GetKickBuilder(user, context.User, caseID, reason, logEntry.DateTime);
 
@@ -157,20 +161,21 @@ namespace CitizenEnforcer.Services
             //Kick
             await user.KickAsync();
 
-            var message = await SendEmbedToModLog(context.Guild, builder);
+            var message = await SendEmbedToModLog(botContext, context.Guild, builder);
             logEntry.LoggedMessageId = message.Id;
-            await _botContext.SaveChangesAsync();
+            await botContext.SaveChangesAsync();
 
-            await SendMessageToAnnounce(context.Guild, $"***{user} has been kicked from the server***");
+            await SendMessageToAnnounce(botContext, context.Guild, $"***{user} has been kicked from the server***");
         }
         public async Task TempBanUser(SocketCommandContext context, IUser user, string reason)
         {
+            await using var botContext = _contextFactory.CreateDbContext();
             await context.Message.DeleteAsync();
-            ulong caseID = await GenerateNewCaseID(context.Guild.Id);
+            ulong caseID = await GenerateNewCaseID(botContext, context.Guild.Id);
             var logEntry = new ModLog(context, user, caseID, InfractionType.TempBan, reason);
 
-            await _botContext.ModLogs.AddAsync(logEntry);
-            await _botContext.SaveChangesAsync();
+            await botContext.ModLogs.AddAsync(logEntry);
+            await botContext.SaveChangesAsync();
 
             var tempBan = new TempBan
             {
@@ -179,26 +184,27 @@ namespace CitizenEnforcer.Services
                 ExpireDate = DateTimeOffset.UtcNow.AddDays(3)
             };
             _banCache.Set(user.Id, new CacheModel(context.Guild.Id), TimeSpan.FromSeconds(5));
-            await _botContext.TempBans.AddAsync(tempBan);
+            await botContext.TempBans.AddAsync(tempBan);
 
             var builder = ModeratorFormats.GetTempBanBuilder(user, context.User, caseID, reason, logEntry.DateTime, tempBan.ExpireDate);
             await SendMessageToUser(user, $"You have been temporarily banned from the guild ``{context.Guild.Name}`` {(string.IsNullOrWhiteSpace(reason) ? string.Empty : $"for: ``{reason}``")}\nThis ban will expire on ``{tempBan.ExpireDate.DateTime} UTC``");
             //Ban
             await context.Guild.AddBanAsync(user);
 
-            var message = await SendEmbedToModLog(context.Guild, builder);
+            var message = await SendEmbedToModLog(botContext, context.Guild, builder);
             logEntry.LoggedMessageId = message.Id;
-            await _botContext.SaveChangesAsync();
+            await botContext.SaveChangesAsync();
 
-            await SendMessageToAnnounce(context.Guild, $"***{user} has been temporarily banned from the server***");
+            await SendMessageToAnnounce(botContext, context.Guild, $"***{user} has been temporarily banned from the server***");
         }
 
         //TODO this handles too many different concerns. Clean it up at some point.
         public async Task BanUser(SocketCommandContext context, IUser user, BanType type, string reason)
         {
+            await using var botContext = _contextFactory.CreateDbContext();
             await context.Message.DeleteAsync();
 
-            var foundtb = await _botContext.TempBans
+            var foundtb = await botContext.TempBans
                 .Include(y => y.ModLog)
                 .FirstOrDefaultAsync(x => x.TempBanActive && x.ModLog.UserId == user.Id && x.ModLog.GuildId == context.Guild.Id);
             //If the user is TB'd then they're already banned and we don't need to do anything.
@@ -206,7 +212,7 @@ namespace CitizenEnforcer.Services
             {
                 Log.Debug("Ban short circuit: A previous temp-ban was found for user {username}-{id}", user.Username, user.Id);
                 foundtb.TempBanActive = false;
-                await _botContext.SaveChangesAsync();
+                await botContext.SaveChangesAsync();
             }
             else
             {
@@ -226,47 +232,48 @@ namespace CitizenEnforcer.Services
                     await context.Guild.AddBanAsync(user);
             }
 
-            ulong caseID = await GenerateNewCaseID(context.Guild.Id);
+            ulong caseID = await GenerateNewCaseID(botContext, context.Guild.Id);
             var logEntry = new ModLog(context, user, caseID, InfractionType.Ban, reason);
             
-            await _botContext.ModLogs.AddAsync(logEntry);
-            await _botContext.SaveChangesAsync();
+            await botContext.ModLogs.AddAsync(logEntry);
+            await botContext.SaveChangesAsync();
 
             var builder = ModeratorFormats.GetBanBuilder(user, context.User, caseID, reason, logEntry.DateTime);
 
-            var message = await SendEmbedToModLog(context.Guild, builder);
+            var message = await SendEmbedToModLog(botContext, context.Guild, builder);
             logEntry.LoggedMessageId = message.Id;
-            await _botContext.SaveChangesAsync();
+            await botContext.SaveChangesAsync();
 
-            await SendMessageToAnnounce(context.Guild, $"***{user} has been permanently banned from the server***");
+            await SendMessageToAnnounce(botContext, context.Guild, $"***{user} has been permanently banned from the server***");
         }
 
         public async Task UnbanUser(SocketCommandContext context, IUser bannedUser)
         {
+            await using var botContext = _contextFactory.CreateDbContext();
             await context.Message.DeleteAsync();
-            var foundtb = await _botContext.TempBans.Include(x => x.ModLog).Cacheable().AsQueryable().FirstOrDefaultAsync(x => x.ModLog.UserId == bannedUser.Id && x.TempBanActive);
+            var foundtb = await botContext.TempBans.Include(x => x.ModLog).Cacheable().AsQueryable().FirstOrDefaultAsync(x => x.ModLog.UserId == bannedUser.Id && x.TempBanActive);
             if (foundtb != null)
             {
                 foundtb.TempBanActive = false;
-                await _botContext.SaveChangesAsync();
+                await botContext.SaveChangesAsync();
             }
             _banCache.Set(bannedUser.Id, new CacheModel(context.Guild.Id, CacheType.UnbanReject), TimeSpan.FromSeconds(5));
             await context.Guild.RemoveBanAsync(bannedUser);
             var builder = ModeratorFormats.GetUnbanBuilder(bannedUser, "Manual Unban", context.User);
-            await SendEmbedToModLog(context.Guild, builder);
-            await SendMessageToAnnounce(context.Guild, $"***{bannedUser}'s ban has been lifted***");
+            await SendEmbedToModLog(botContext, context.Guild, builder);
+            await SendMessageToAnnounce(botContext, context.Guild, $"***{bannedUser}'s ban has been lifted***");
         }
 
-        public async Task<IUserMessage> SendEmbedToModLog(SocketGuild guild, EmbedBuilder embed)
+        public async Task<IUserMessage> SendEmbedToModLog(BotContext context, SocketGuild guild, EmbedBuilder embed)
         {
-            var foundGuild = await _botContext.Guilds.AsNoTracking().FirstOrDefaultAsync(x => x.GuildId == guild.Id);
+            var foundGuild = await context.Guilds.AsNoTracking().FirstOrDefaultAsync(x => x.GuildId == guild.Id);
             var channel = guild.GetTextChannel(foundGuild.ModerationChannel);
             return await channel.SendMessageAsync("", embed: embed.Build());
         }
 
-        public async Task SendMessageToAnnounce(SocketGuild guild, string message = "", EmbedBuilder embed = null)
+        public async Task SendMessageToAnnounce(BotContext context, SocketGuild guild, string message = "", EmbedBuilder embed = null)
         {
-            var foundGuild = await _botContext.Guilds.AsNoTracking().FirstOrDefaultAsync(x => x.GuildId == guild.Id && x.IsPublicAnnounceEnabled);
+            var foundGuild = await context.Guilds.AsNoTracking().FirstOrDefaultAsync(x => x.GuildId == guild.Id && x.IsPublicAnnounceEnabled);
             //public announce disabled
             if (foundGuild == null)
                 return;
@@ -287,9 +294,9 @@ namespace CitizenEnforcer.Services
             catch (HttpException){}
         }
 
-        private async Task<ulong> GenerateNewCaseID(ulong GuildID)
+        private async Task<ulong> GenerateNewCaseID(BotContext context, ulong GuildID)
         {
-            var logEntries = await _botContext.ModLogs.AsNoTracking().AsAsyncEnumerable().LastOrDefaultAsync(x => x.GuildId == GuildID);
+            var logEntries = await context.ModLogs.AsNoTracking().AsAsyncEnumerable().LastOrDefaultAsync(x => x.GuildId == GuildID);
             return logEntries?.ModLogCaseID + 1 ?? 1;
         }
 
