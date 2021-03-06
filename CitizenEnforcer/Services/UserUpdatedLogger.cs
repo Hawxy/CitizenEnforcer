@@ -31,11 +31,11 @@ namespace CitizenEnforcer.Services
 {
     public class UserUpdatedLogger : InitializedService
     {
-        private readonly BotContext _botContext;
+        private readonly IDbContextFactory<BotContext> _dbContextFactory;
         private readonly DiscordSocketClient _client;
-        public UserUpdatedLogger(BotContext botContext, DiscordSocketClient client)
+        public UserUpdatedLogger(IDbContextFactory<BotContext> dbContextFactory, DiscordSocketClient client)
         {
-            _botContext = botContext;
+            _dbContextFactory = dbContextFactory;
             _client = client;
         }
 
@@ -54,10 +54,11 @@ namespace CitizenEnforcer.Services
                 return;
 
             IReadOnlyCollection<SocketGuild> guilds = before.MutualGuilds;
+            await using var botContext = _dbContextFactory.CreateDbContext();
 
             foreach (var guild in guilds)
             {
-                Guild dbGuild = await _botContext.Guilds.AsNoTracking().SingleOrDefaultAsync(x => x.GuildId == guild.Id && x.IsEditLoggingEnabled);
+                Guild dbGuild = await botContext.Guilds.AsNoTracking().SingleOrDefaultAsync(x => x.GuildId == guild.Id && x.IsEditLoggingEnabled);
                 if (dbGuild == null) continue;
 
                 SocketChannel channel = _client.GetChannel(dbGuild.LoggingChannel);

@@ -38,11 +38,11 @@ namespace CitizenEnforcer.Preconditions
         }
         public override async Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command, IServiceProvider services)
         {
-            IConfiguration config = services.GetService<IConfiguration>();
+            IConfiguration config = services.GetRequiredService<IConfiguration>();
             Guild guild = null;
             if (_type >= InitializedType.Basic)
             {
-                var botContext = services.GetService<BotContext>();
+                await using var botContext = services.GetRequiredService<IDbContextFactory<BotContext>>().CreateDbContext();
                 guild = await botContext.Guilds.AsNoTracking().Cacheable().FirstOrDefaultAsync(x => x.GuildId == context.Guild.Id);
                 if (guild == null)
                     return PreconditionResult.FromError($"Failure: This bot has not been setup on this server, use ``{config["Prefix"]}setup initialize``");
